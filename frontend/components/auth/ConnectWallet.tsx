@@ -15,6 +15,7 @@ export function ConnectWallet({ className = '' }: ConnectWalletProps) {
     address, 
     login, 
     logout,
+
     loginMethod 
   } = useAuth();
   const { mutate } = useDisconnect();
@@ -57,6 +58,7 @@ export function ConnectWallet({ className = '' }: ConnectWalletProps) {
   }
 
   // Not authenticated - show connect button with social login options
+  if(!isAuthenticated) {
   return (
     <button
       onClick={login}
@@ -66,8 +68,10 @@ export function ConnectWallet({ className = '' }: ConnectWalletProps) {
     </button>
   );
 }
+}
 
 // Helper function to format address
 function formatAddress(address: string): string {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
+// Attempted to log in, but user is already logged in. Use a `link` helper instead.

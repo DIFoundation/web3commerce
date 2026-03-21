@@ -6,6 +6,7 @@ import { useConnection } from 'wagmi';
 import { ConnectWallet } from '@/components/auth/ConnectWallet';
 import { CartItem } from '@/components/cart/CartItem';
 import Link from 'next/link';
+import CheckoutModal from '@/components/checkout/CheckoutModal';
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, clearCart, formatPrice } = useCart();
@@ -18,9 +19,8 @@ export default function CartPage() {
   const tax = subtotal * BigInt(5) / BigInt(100); // 5% tax
   const total = subtotal + shippingFee + tax;
 
-  const handleCheckout = () => {
-    if (!isConnected) return;
-    window.location.href = '/checkout';
+  const displayCheckoutModal = () => {
+    setShowCheckoutModal(true);
   };
 
   const handleClearCart = () => {
@@ -178,7 +178,7 @@ export default function CartPage() {
                       </div>
                     ) : (
                       <button
-                        onClick={handleCheckout}
+                        onClick={displayCheckoutModal}
                         className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
                       >
                         Proceed to Checkout
@@ -197,6 +197,11 @@ export default function CartPage() {
           </div>
         </div>
       </div>
+
+      <CheckoutModal 
+        isOpen={showCheckoutModal} 
+        onClose={() => setShowCheckoutModal(false)} 
+      />
     </div>
   );
 }

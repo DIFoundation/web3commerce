@@ -1,67 +1,96 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCart } from '@/hooks/useCart';
 import { useConnection } from 'wagmi';
 import { ConnectWallet } from '@/components/auth/ConnectWallet';
-import Link from 'next/link';
+import { MapPin, Lock } from 'lucide-react';
+import { useCreateOrder } from '@/hooks/useMarketplace';
+// import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
-export default function CheckoutModal() {
+
+// const SuccessAnimation = () => {
+//   return (
+//     <DotLottieReact
+//       src="https://lottie.host/bf6de9b1-a2c0-475d-9419-cfd4cb0968bb/LMC6TjvNBu.lottie"
+//       loop
+//       autoplay
+//     />
+//   );
+// };
+
+
+export default function CheckoutModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { cart, clearCart, formatPrice } = useCart();
   const { isConnected } = useConnection();
+  const { createOrder, isLoading, isConfirming, isSuccess, isError } = useCreateOrder();
   
-  const [isOpen, setIsOpen] = useState(false);
   const [shippingAddress, setShippingAddress] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [ordersCreated, setOrdersCreated] = useState(false);
 
   const subtotal = cart.totalAmount;
   const shippingFee = cart.totalItems > 0 ? BigInt(0.001 * 1e18) : BigInt(0);
   const tax = subtotal * BigInt(5) / BigInt(100);
   const total = subtotal + shippingFee + tax;
 
-  const handleCheckout = async () => {
-    if (!isConnected || !shippingAddress) return;
+  // Handle successful order completion
+  useEffect(() => {
+    if (ordersCreated && isSuccess && !isConfirming) {
+      clearCart();
+      onClose();
+      // SuccessAnimation();
+      alert('Order placed successfully!');
+      setOrdersCreated(false);
+      setIsProcessing(false);
+    }
+  }, [isSuccess, isConfirming, ordersCreated, clearCart, onClose]);
+
+  // Handle transaction errors
+  useEffect(() => {
+    if (ordersCreated && isError) {
+      alert('Transaction failed. Please try again.');
+      setOrdersCreated(false);
+      setIsProcessing(false);
+    }
+  }, [isError, ordersCreated]);
+
+  const handleCreateOrder = async () => {
+    if (!isConnected || !shippingAddress || cart.items.length === 0) return;
     
     setIsProcessing(true);
     
     try {
-      // Simulate checkout process
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Clear cart after successful checkout
-      clearCart();
-      setIsOpen(false);
-      
-      // Show success message
-      alert('Order placed successfully!');
+      // Create orders for each cart item
+      for (const item of cart.items) {
+        await createOrder(
+          item.productId,
+          item.quantity,
+          shippingAddress,
+          item.product.price * BigInt(item.quantity)
+        );
+      }
+      setOrdersCreated(true);
     } catch (error) {
       console.error('Checkout failed:', error);
       alert('Checkout failed. Please try again.');
-    } finally {
+      
       setIsProcessing(false);
+      setOrdersCreated(false);
     }
   };
 
   return (
     <>
-      {/* Trigger Button */}
-      <button
-        onClick={() => setIsOpen(true)}
-        disabled={cart.totalItems === 0}
-        className="fixed bottom-6 right-6 bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-blue-700 transition-colors font-medium z-40"
-      >
-        Checkout ({cart.totalItems} items)
-      </button>
-
-      {/* Modal */}
-      {isOpen && (
+    {/* Modal */}between
+    {isOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg max-w-3xl w-full min-h-[80vh] overflow-y-auto flex flex-col">
             {/* Header */}
             <div className="flex justify-between items-center p-6 border-b">
               <h2 className="text-xl font-bold text-gray-900">Checkout</h2>
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={onClose}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -71,7 +100,7 @@ export default function CheckoutModal() {
             </div>
 
             {/* Content */}
-            <div className="p-6">
+            <div className="p-6 flex-1 overflow-y-auto">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Order Summary */}
                 <div>
@@ -159,9 +188,25 @@ export default function CheckoutModal() {
                         />
                       </div>
 
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-red-600">
+                            <MapPin className="w-5 h-5"/>
+                          </span>
+                          <span className="text-sm font-medium text-red-900">
+                            Map Location (Comming Soon)
+                          </span>
+                        </div>
+                        <p className="text-sm text-red-800">
+                          Click the map to select your delivery location.
+                        </p>
+                      </div>
+
                       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="text-blue-600">🔒</span>
+                          <span className="text-blue-600">
+                            <Lock className="w-5 h-5"/>
+                          </span>
                           <span className="text-sm font-medium text-blue-900">
                             Secure Blockchain Payment
                           </span>
@@ -177,20 +222,20 @@ export default function CheckoutModal() {
             </div>
 
             {/* Footer */}
-            <div className="flex justify-between items-center p-6 border-t bg-gray-50">
-              <Link
-                href="/cart"
-                className="text-blue-600 hover:text-blue-700 font-medium"
+            <div className="flex justify-end items-center gap-5 p-6 border-t bg-gray-50 mt-auto">
+              <button
+                onClick={onClose}
+                className="bg-gray-200 text-blue-600 px-8 py-3 rounded-lg hover:text-blue-700 font-medium"
               >
-                ← Back to Cart
-              </Link>
+                Cancel
+              </button>
               
               <button
-                onClick={handleCheckout}
-                disabled={isProcessing || !isConnected || !shippingAddress}
+                onClick={handleCreateOrder}
+                disabled={isProcessing || isLoading || isConfirming || !isConnected || !shippingAddress}
                 className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors font-medium"
               >
-                {isProcessing ? 'Processing...' : `Pay ${formatPrice(total)} CELO`}
+                {isProcessing || isLoading || isConfirming ? 'Processing...' : `Pay ${formatPrice(total)} CELO`}
               </button>
             </div>
           </div>

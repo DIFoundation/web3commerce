@@ -8,6 +8,7 @@ import { useConnection } from 'wagmi';
 import { ConnectWallet } from '@/components/auth/ConnectWallet';
 import Image from 'next/image';
 import Link from 'next/link';
+import { CartIcon } from '@/components/cart/CartIcon';
 
 export default function ProductPage() {
   const params = useParams();
@@ -317,9 +318,11 @@ export default function ProductPage() {
             </div>
           </div>
         </div>
-      </div>
 
-      
+        <div className='fixed bottom-15 right-15'>
+          <CartIcon />
+        </div>
+      </div>
     </div>
   );
 }
