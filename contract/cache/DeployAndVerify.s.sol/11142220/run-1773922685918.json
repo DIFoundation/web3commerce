@@ -1,0 +1,13 @@
+{
+  "transactions": [
+    {
+      "rpc": "https://celo-sepolia.drpc.org"
+    },
+    {
+      "rpc": "https://celo-sepolia.drpc.org"
+    },
+    {
+      "rpc": "https://celo-sepolia.drpc.org"
+    }
+  ]
+}
