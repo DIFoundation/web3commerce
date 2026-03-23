@@ -47,7 +47,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 text-white">
+      <section className="bg-linear-to-br from-blue-600 via-purple-600 to-pink-600 text-white">
         <div className="max-w-7xl mx-auto px-4 py-20">
           <div className="text-center">
             <h1 className="text-5xl font-bold mb-6 leading-tight">
@@ -170,7 +170,7 @@ export default function LandingPage() {
                       <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded text-xs font-semibold">
                         Verified
                       </div>
-                      {product.id.toString() % 3 === 0 && (
+                      {Number(product.id) % 3 === 0 && (
                         <div className="absolute top-2 left-2 bg-purple-500 text-white px-2 py-1 rounded text-xs font-semibold">
                           NFT-Backed
                         </div>
@@ -318,7 +318,7 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+      <section className="py-20 bg-linear-to-r from-blue-600 to-purple-600 text-white">
         <div className="max-w-4xl mx-auto text-center px-4">
           <h2 className="text-4xl font-bold mb-4">
             Ready to Start Shopping?

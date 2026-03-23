@@ -319,7 +319,7 @@ export default function ProductPage() {
           </div>
         </div>
 
-        <div className='fixed bottom-15 right-15'>
+        <div className='fixed bottom-15 right-15 bg-blue-400 p-3 rounded-full'>
           <CartIcon />
         </div>
       </div>

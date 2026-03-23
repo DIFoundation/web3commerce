@@ -66,6 +66,7 @@ export function useAuth() {
     return {
       email: user.email?.address,
       phone: user.phone?.number,
+      type: user.wallet?.connectorType,
       socialAccounts: user.linkedAccounts?.filter((account: LinkedAccount) => 
         account.type === 'google' || account.type === 'twitter'
       ),
