@@ -20,7 +20,7 @@ export function useContract() {
     address,
     isConnected,
     chainId,
-    balance: balance ? balance.formatted : '0',
+    balance: balance ? balance.value : '0',
     nativeCurrency: balance?.symbol,
 
     // Marketplace

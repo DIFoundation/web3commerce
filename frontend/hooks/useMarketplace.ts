@@ -1,6 +1,6 @@
 import { useConnection, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { MarketplaceAbi } from '@/lib/contracts';
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { Address, parseEther } from 'viem';
 
 const MARKETPLACE_ADDRESS = process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS as Address;
@@ -90,11 +90,11 @@ export function useSeller(address?: Address) {
 
   const seller = data
     ? {
-        sellerAddress: data[0] as Address,
-        storeName: data[1] as string,
-        description: data[2] as string,
-        isActive: data[3] as boolean,
-        registeredAt: data[4] as bigint,
+        sellerAddress: (data as readonly unknown[])[0] as Address,
+        storeName: (data as readonly unknown[])[1] as string,
+        description: (data as readonly unknown[])[2] as string,
+        isActive: (data as readonly unknown[])[3] as boolean,
+        registeredAt: (data as readonly unknown[])[4] as bigint,
       }
     : undefined;
 
@@ -114,15 +114,15 @@ export function useProduct(productId?: bigint) {
 
   const product = data
     ? {
-        id: data[0] as bigint,
-        seller: data[1] as Address,
-        name: data[2] as string,
-        description: data[3] as string,
-        price: data[4] as bigint,
-        stock: data[5] as bigint,
-        ipfsHash: data[6] as string,
-        isActive: data[7] as boolean,
-        createdAt: data[8] as bigint,
+        id: (data as readonly unknown[])[0] as bigint,
+        seller: (data as readonly unknown[])[1] as Address,
+        name: (data as readonly unknown[])[2] as string,
+        description: (data as readonly unknown[])[3] as string,
+        price: (data as readonly unknown[])[4] as bigint,
+        stock: (data as readonly unknown[])[5] as bigint,
+        ipfsHash: (data as readonly unknown[])[6] as string,
+        isActive: (data as readonly unknown[])[7] as boolean,
+        createdAt: (data as readonly unknown[])[8] as bigint,
       }
     : undefined;
 
@@ -142,16 +142,16 @@ export function useOrder(orderId?: bigint) {
 
   const order = data
     ? {
-        id: data[0] as bigint,
-        productId: data[1] as bigint,
-        buyer: data[2] as Address,
-        seller: data[3] as Address,
-        quantity: data[4] as bigint,
-        totalAmount: data[5] as bigint,
-        shippingAddress: data[6] as string,
-        status: data[7] as OrderStatus,
-        createdAt: data[8] as bigint,
-        escrowId: data[9] as bigint,
+        id: (data as readonly unknown[])[0] as bigint,
+        productId: (data as readonly unknown[])[1] as bigint,
+        buyer: (data as readonly unknown[])[2] as Address,
+        seller: (data as readonly unknown[])[3] as Address,
+        quantity: (data as readonly unknown[])[4] as bigint,
+        totalAmount: (data as readonly unknown[])[5] as bigint,
+        shippingAddress: (data as readonly unknown[])[6] as string,
+        status: (data as readonly unknown[])[7] as OrderStatus,
+        createdAt: (data as readonly unknown[])[8] as bigint,
+        escrowId: (data as readonly unknown[])[9] as bigint,
       }
     : undefined;
 
@@ -240,6 +240,62 @@ export function useOrderCount() {
   };
 }
 
+export function useOrderCounter() {
+  const { data, isLoading, error } = useReadContract({
+    address: MARKETPLACE_ADDRESS,
+    abi: MarketplaceAbi,
+    functionName: 'orderCounter',
+  });
+
+  return {
+    orderCounter: data as bigint | undefined,
+    isLoading,
+    error,
+  };
+}
+
+export function useProductCounter() {
+  const { data, isLoading, error } = useReadContract({
+    address: MARKETPLACE_ADDRESS,
+    abi: MarketplaceAbi,
+    functionName: 'productCounter',
+  });
+
+  return {
+    productCounter: data as bigint | undefined,
+    isLoading,
+    error,
+  };
+}
+
+export function useEscrowContract() {
+  const { data, isLoading, error } = useReadContract({
+    address: MARKETPLACE_ADDRESS,
+    abi: MarketplaceAbi,
+    functionName: 'escrowContract',
+  });
+
+  return {
+    escrowContract: data as Address | undefined,
+    isLoading,
+    error,
+  };
+}
+
+export function useMarketplaceOwner() {
+  const { data, isLoading, error } = useReadContract({
+    address: MARKETPLACE_ADDRESS,
+    abi: MarketplaceAbi,
+    functionName: 'owner',
+  });
+
+  return {
+    owner: data as Address | undefined,
+    isLoading,
+    error,
+  };
+}
+
 export function useAllProducts() {
   const { data: productCount, isLoading: countLoading } = useReadContract({
     address: MARKETPLACE_ADDRESS,
@@ -247,8 +303,7 @@ export function useAllProducts() {
     functionName: 'getProductCount',
   });
 
-  // Create array of all product IDs (1 to productCount)
-  const allProductIds = productCount 
+  const allProductIds = productCount
     ? Array.from({ length: Number(productCount) }, (_, i) => BigInt(i + 1))
     : [];
 
@@ -286,487 +341,255 @@ export function useGetProducts(productIds: bigint[]) {
 // ============ Setter Hooks (Write Operations) ============
 
 export function useRegisterSeller() {
-  const [txState, setTxState] = useState<TransactionState>({
-    isLoading: false,
-    isSuccess: false,
-    isError: false,
-    error: null,
-    hash: undefined,
-  });
+  const { mutate, data: hash, error, isPending } = useWriteContract();
 
-  const { writeContract, data: hash, error, isPending } = useWriteContract();
-
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash,
-  });
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const registerSeller = useCallback(
-    async (storeName: string, description: string) => {
-      setTxState({ ...txState, isLoading: true });
-      try {
-        writeContract({
-          address: MARKETPLACE_ADDRESS,
-          abi: MarketplaceAbi,
-          functionName: 'registerSeller',
-          args: [storeName, description],
-        });
-      } catch (err) {
-        setTxState({
-          isLoading: false,
-          isSuccess: false,
-          isError: true,
-          error: err as Error,
-          hash: undefined,
-        });
-      }
+    (storeName: string, description: string) => {
+      mutate({
+        address: MARKETPLACE_ADDRESS,
+        abi: MarketplaceAbi,
+        functionName: 'registerSeller',
+        args: [storeName, description],
+      });
     },
-    [writeContract, txState]
+    [mutate]
   );
-
-  // Update state based on transaction status
-  if (hash && txState.hash !== hash) {
-    setTxState({ ...txState, hash });
-  }
-
-  if (isSuccess && !txState.isSuccess) {
-    setTxState({
-      isLoading: false,
-      isSuccess: true,
-      isError: false,
-      error: null,
-      hash,
-    });
-  }
-
-  if (error && !txState.isError) {
-    setTxState({
-      isLoading: false,
-      isSuccess: false,
-      isError: true,
-      error,
-      hash,
-    });
-  }
 
   return {
     registerSeller,
-    ...txState,
+    isLoading: isPending,
     isConfirming,
+    isSuccess,
+    isError: !!error,
+    error,
+    hash,
   };
 }
 
 export function useCreateProduct() {
-  const [txState, setTxState] = useState<TransactionState>({
-    isLoading: false,
-    isSuccess: false,
-    isError: false,
-    error: null,
-    hash: undefined,
-  });
+  const { mutate, data: hash, error, isPending } = useWriteContract();
 
-  const { writeContract, data: hash, error, isPending } = useWriteContract();
-
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash,
-  });
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const createProduct = useCallback(
-    async (name: string, description: string, price: string, stock: number, ipfsHash: string) => {
-      setTxState({ ...txState, isLoading: true });
-      try {
-        writeContract({
-          address: MARKETPLACE_ADDRESS,
-          abi: MarketplaceAbi,
-          functionName: 'createProduct',
-          args: [name, description, parseEther(price), BigInt(stock), ipfsHash],
-        });
-      } catch (err) {
-        setTxState({
-          isLoading: false,
-          isSuccess: false,
-          isError: true,
-          error: err as Error,
-          hash: undefined,
-        });
-      }
+    (name: string, description: string, price: string, stock: number, ipfsHash: string) => {
+      mutate({
+        address: MARKETPLACE_ADDRESS,
+        abi: MarketplaceAbi,
+        functionName: 'createProduct',
+        args: [name, description, parseEther(price), BigInt(stock), ipfsHash],
+      });
     },
-    [writeContract, txState]
+    [mutate]
   );
-
-  if (hash && txState.hash !== hash) {
-    setTxState({ ...txState, hash });
-  }
-
-  if (isSuccess && !txState.isSuccess) {
-    setTxState({
-      isLoading: false,
-      isSuccess: true,
-      isError: false,
-      error: null,
-      hash,
-    });
-  }
-
-  if (error && !txState.isError) {
-    setTxState({
-      isLoading: false,
-      isSuccess: false,
-      isError: true,
-      error,
-      hash,
-    });
-  }
 
   return {
     createProduct,
-    ...txState,
+    isLoading: isPending,
     isConfirming,
+    isSuccess,
+    isError: !!error,
+    error,
+    hash,
   };
 }
 
 export function useUpdateProduct() {
-  const [txState, setTxState] = useState<TransactionState>({
-    isLoading: false,
-    isSuccess: false,
-    isError: false,
-    error: null,
-    hash: undefined,
-  });
+  const { mutate, data: hash, error, isPending } = useWriteContract();
 
-  const { writeContract, data: hash, error, isPending } = useWriteContract();
-
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash,
-  });
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const updateProduct = useCallback(
-    async (productId: bigint, price: string, stock: number, isActive: boolean) => {
-      setTxState({ ...txState, isLoading: true });
-      try {
-        writeContract({
-          address: MARKETPLACE_ADDRESS,
-          abi: MarketplaceAbi,
-          functionName: 'updateProduct',
-          args: [productId, parseEther(price), BigInt(stock), isActive],
-        });
-      } catch (err) {
-        setTxState({
-          isLoading: false,
-          isSuccess: false,
-          isError: true,
-          error: err as Error,
-          hash: undefined,
-        });
-      }
+    (productId: bigint, price: string, stock: number, isActive: boolean) => {
+      mutate({
+        address: MARKETPLACE_ADDRESS,
+        abi: MarketplaceAbi,
+        functionName: 'updateProduct',
+        args: [productId, parseEther(price), BigInt(stock), isActive],
+      });
     },
-    [writeContract, txState]
+    [mutate]
   );
-
-  if (hash && txState.hash !== hash) {
-    setTxState({ ...txState, hash });
-  }
-
-  if (isSuccess && !txState.isSuccess) {
-    setTxState({
-      isLoading: false,
-      isSuccess: true,
-      isError: false,
-      error: null,
-      hash,
-    });
-  }
-
-  if (error && !txState.isError) {
-    setTxState({
-      isLoading: false,
-      isSuccess: false,
-      isError: true,
-      error,
-      hash,
-    });
-  }
 
   return {
     updateProduct,
-    ...txState,
+    isLoading: isPending,
     isConfirming,
+    isSuccess,
+    isError: !!error,
+    error,
+    hash,
   };
 }
 
 export function useRemoveProduct() {
-  const [txState, setTxState] = useState<TransactionState>({
-    isLoading: false,
-    isSuccess: false,
-    isError: false,
-    error: null,
-    hash: undefined,
-  });
+  const { mutate, data: hash, error, isPending } = useWriteContract();
 
-  const { writeContract, data: hash, error, isPending } = useWriteContract();
-
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash,
-  });
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const removeProduct = useCallback(
-    async (productId: bigint) => {
-      setTxState({ ...txState, isLoading: true });
-      try {
-        writeContract({
-          address: MARKETPLACE_ADDRESS,
-          abi: MarketplaceAbi,
-          functionName: 'removeProduct',
-          args: [productId],
-        });
-      } catch (err) {
-        setTxState({
-          isLoading: false,
-          isSuccess: false,
-          isError: true,
-          error: err as Error,
-          hash: undefined,
-        });
-      }
+    (productId: bigint) => {
+      mutate({
+        address: MARKETPLACE_ADDRESS,
+        abi: MarketplaceAbi,
+        functionName: 'removeProduct',
+        args: [productId],
+      });
     },
-    [writeContract, txState]
+    [mutate]
   );
-
-  if (hash && txState.hash !== hash) {
-    setTxState({ ...txState, hash });
-  }
-
-  if (isSuccess && !txState.isSuccess) {
-    setTxState({
-      isLoading: false,
-      isSuccess: true,
-      isError: false,
-      error: null,
-      hash,
-    });
-  }
-
-  if (error && !txState.isError) {
-    setTxState({
-      isLoading: false,
-      isSuccess: false,
-      isError: true,
-      error,
-      hash,
-    });
-  }
 
   return {
     removeProduct,
-    ...txState,
+    isLoading: isPending,
     isConfirming,
+    isSuccess,
+    isError: !!error,
+    error,
+    hash,
   };
 }
 
 export function useCreateOrder() {
-  const [txState, setTxState] = useState<TransactionState>({
-    isLoading: false,
-    isSuccess: false,
-    isError: false,
-    error: null,
-    hash: undefined,
-  });
+  const { mutate, data: hash, error, isPending } = useWriteContract();
 
-  const { writeContract, data: hash, error, isPending } = useWriteContract();
-
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash,
-  });
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const createOrder = useCallback(
-    async (productId: bigint, quantity: number, shippingAddress: string, totalAmount: bigint) => {
-      setTxState({ ...txState, isLoading: true });
-      try {
-        writeContract({
-          address: MARKETPLACE_ADDRESS,
-          abi: MarketplaceAbi,
-          functionName: 'createOrder',
-          args: [productId, BigInt(quantity), shippingAddress],
-          value: parseEther(totalAmount),
-        });
-      } catch (err) {
-        setTxState({
-          isLoading: false,
-          isSuccess: false,
-          isError: true,
-          error: err as Error,
-          hash: undefined,
-        });
-      }
+    (productId: bigint, quantity: number, shippingAddress: string, totalAmount: bigint) => {
+      mutate({
+        address: MARKETPLACE_ADDRESS,
+        abi: MarketplaceAbi,
+        functionName: 'createOrder',
+        args: [productId, BigInt(quantity), shippingAddress],
+        value: totalAmount,
+      });
     },
-    [writeContract, txState]
+    [mutate]
   );
-
-  if (hash && txState.hash !== hash) {
-    setTxState({ ...txState, hash });
-  }
-
-  if (isSuccess && !txState.isSuccess) {
-    setTxState({
-      isLoading: false,
-      isSuccess: true,
-      isError: false,
-      error: null,
-      hash,
-    });
-  }
-
-  if (error && !txState.isError) {
-    setTxState({
-      isLoading: false,
-      isSuccess: false,
-      isError: true,
-      error,
-      hash,
-    });
-  }
 
   return {
     createOrder,
-    ...txState,
+    isLoading: isPending,
     isConfirming,
+    isSuccess,
+    isError: !!error,
+    error,
+    hash,
   };
 }
 
 export function useConfirmOrder() {
-  const [txState, setTxState] = useState<TransactionState>({
-    isLoading: false,
-    isSuccess: false,
-    isError: false,
-    error: null,
-    hash: undefined,
-  });
+  const { mutate, data: hash, error, isPending } = useWriteContract();
 
-  const { writeContract, data: hash, error, isPending } = useWriteContract();
-
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash,
-  });
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const confirmOrder = useCallback(
-    async (orderId: bigint) => {
-      setTxState({ ...txState, isLoading: true });
-      try {
-        writeContract({
-          address: MARKETPLACE_ADDRESS,
-          abi: MarketplaceAbi,
-          functionName: 'confirmOrder',
-          args: [orderId],
-        });
-      } catch (err) {
-        setTxState({
-          isLoading: false,
-          isSuccess: false,
-          isError: true,
-          error: err as Error,
-          hash: undefined,
-        });
-      }
+    (orderId: bigint) => {
+      mutate({
+        address: MARKETPLACE_ADDRESS,
+        abi: MarketplaceAbi,
+        functionName: 'confirmOrder',
+        args: [orderId],
+      });
     },
-    [writeContract, txState]
+    [mutate]
   );
-
-  if (hash && txState.hash !== hash) {
-    setTxState({ ...txState, hash });
-  }
-
-  if (isSuccess && !txState.isSuccess) {
-    setTxState({
-      isLoading: false,
-      isSuccess: true,
-      isError: false,
-      error: null,
-      hash,
-    });
-  }
-
-  if (error && !txState.isError) {
-    setTxState({
-      isLoading: false,
-      isSuccess: false,
-      isError: true,
-      error,
-      hash,
-    });
-  }
 
   return {
     confirmOrder,
-    ...txState,
+    isLoading: isPending,
     isConfirming,
+    isSuccess,
+    isError: !!error,
+    error,
+    hash,
   };
 }
 
 export function useCancelOrder() {
-  const [txState, setTxState] = useState<TransactionState>({
-    isLoading: false,
-    isSuccess: false,
-    isError: false,
-    error: null,
-    hash: undefined,
-  });
+  const { mutate, data: hash, error, isPending } = useWriteContract();
 
-  const { writeContract, data: hash, error, isPending } = useWriteContract();
-
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash,
-  });
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const cancelOrder = useCallback(
-    async (orderId: bigint) => {
-      setTxState({ ...txState, isLoading: true });
-      try {
-        writeContract({
-          address: MARKETPLACE_ADDRESS,
-          abi: MarketplaceAbi,
-          functionName: 'cancelOrder',
-          args: [orderId],
-        });
-      } catch (err) {
-        setTxState({
-          isLoading: false,
-          isSuccess: false,
-          isError: true,
-          error: err as Error,
-          hash: undefined,
-        });
-      }
+    (orderId: bigint) => {
+      mutate({
+        address: MARKETPLACE_ADDRESS,
+        abi: MarketplaceAbi,
+        functionName: 'cancelOrder',
+        args: [orderId],
+      });
     },
-    [writeContract, txState]
+    [mutate]
   );
-
-  if (hash && txState.hash !== hash) {
-    setTxState({ ...txState, hash });
-  }
-
-  if (isSuccess && !txState.isSuccess) {
-    setTxState({
-      isLoading: false,
-      isSuccess: true,
-      isError: false,
-      error: null,
-      hash,
-    });
-  }
-
-  if (error && !txState.isError) {
-    setTxState({
-      isLoading: false,
-      isSuccess: false,
-      isError: true,
-      error,
-      hash,
-    });
-  }
 
   return {
     cancelOrder,
-    ...txState,
+    isLoading: isPending,
     isConfirming,
+    isSuccess,
+    isError: !!error,
+    error,
+    hash,
+  };
+}
+
+export function useSetMarketplaceEscrowContract() {
+  const { mutate, data: hash, error, isPending } = useWriteContract();
+
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+
+  const setEscrowContract = useCallback(
+    (escrowAddress: Address) => {
+      mutate({
+        address: MARKETPLACE_ADDRESS,
+        abi: MarketplaceAbi,
+        functionName: 'setEscrowContract',
+        args: [escrowAddress],
+      });
+    },
+    [mutate]
+  );
+
+  return {
+    setEscrowContract,
+    isLoading: isPending,
+    isConfirming,
+    isSuccess,
+    isError: !!error,
+    error,
+    hash,
+  };
+}
+
+export function useTransferMarketplaceOwnership() {
+  const { mutate, data: hash, error, isPending } = useWriteContract();
+
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+
+  const transferOwnership = useCallback(
+    (newOwner: Address) => {
+      mutate({
+        address: MARKETPLACE_ADDRESS,
+        abi: MarketplaceAbi,
+        functionName: 'transferOwnership',
+        args: [newOwner],
+      });
+    },
+    [mutate]
+  );
+
+  return {
+    transferOwnership,
+    isLoading: isPending,
+    isConfirming,
+    isSuccess,
+    isError: !!error,
+    error,
+    hash,
   };
 }
 
@@ -780,9 +603,15 @@ export function useMarketplace() {
   const { seller } = useSeller(address);
   const { productIds } = useSellerProducts(address);
   const { products: allProducts, isLoading: loadingAllProducts } = useAllProducts();
-  const { products: getProduct, isLoading: loadingProduct } = useGetProducts(productIds)
+  const { products: sellerProductDetails, isLoading: loadingSellerProducts } = useGetProducts(productIds);
   const { orderIds: buyerOrderIds } = useBuyerOrders(address);
   const { orderIds: sellerOrderIds } = useSellerOrders(address);
+  
+  // Admin getters
+  const { orderCounter } = useOrderCounter();
+  const { productCounter } = useProductCounter();
+  const { escrowContract } = useEscrowContract();
+  const { owner: marketplaceOwner } = useMarketplaceOwner();
 
   // Setters
   const registerSellerTx = useRegisterSeller();
@@ -792,6 +621,10 @@ export function useMarketplace() {
   const createOrderTx = useCreateOrder();
   const confirmOrderTx = useConfirmOrder();
   const cancelOrderTx = useCancelOrder();
+  
+  // Admin setters
+  const setEscrowContractTx = useSetMarketplaceEscrowContract();
+  const transferOwnershipTx = useTransferMarketplaceOwnership();
 
   return {
     // User data
@@ -799,20 +632,30 @@ export function useMarketplace() {
     isSeller,
     seller,
     sellerProducts: productIds,
+    sellerProductDetails,
+    loadingSellerProducts,
     buyerOrders: buyerOrderIds,
     sellerOrders: sellerOrderIds,
-    allProducts, loadingAllProducts,
-    getProduct, loadingProduct,
-    
+    allProducts,
+    loadingAllProducts,
+
     // Seller operations
     registerSeller: registerSellerTx,
     createProduct: createProductTx,
     updateProduct: updateProductTx,
     removeProduct: removeProductTx,
-    
+
     // Buyer operations
     createOrder: createOrderTx,
     confirmOrder: confirmOrderTx,
     cancelOrder: cancelOrderTx,
+    
+    // Admin operations
+    orderCounter,
+    productCounter,
+    escrowContract,
+    marketplaceOwner,
+    setEscrowContract: setEscrowContractTx,
+    transferOwnership: transferOwnershipTx,
   };
 }

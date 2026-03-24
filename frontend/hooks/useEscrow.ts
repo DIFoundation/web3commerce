@@ -1,7 +1,7 @@
 import { useConnection, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { EscrowAbi } from '@/lib/contracts';
-import { useState, useCallback } from 'react';
-import { Address } from 'viem';
+import { useCallback } from 'react';
+import { Address, BaseError } from 'viem';
 
 const ESCROW_ADDRESS = process.env.NEXT_PUBLIC_ESCROW_ADDRESS as Address;
 
@@ -27,16 +27,6 @@ export interface EscrowData {
   resolver: Address;
 }
 
-export interface TransactionState {
-  isLoading: boolean;
-  isSuccess: boolean;
-  isError: boolean;
-  error: Error | null;
-  hash: `0x${string}` | undefined;
-  isPending: boolean;
-  isConfirming: boolean;
-}
-
 // ============ Getter Hooks (Read Operations) ============
 
 export function useEscrowData(escrowId?: bigint) {
@@ -50,17 +40,19 @@ export function useEscrowData(escrowId?: bigint) {
     },
   });
 
+  // FIX: getEscrow returns a typed tuple struct, not an indexed array.
+  // Access fields by name, not by numeric index.
   const escrow = data
     ? {
-        id: data[0] as bigint,
-        buyer: data[1] as Address,
-        seller: data[2] as Address,
-        amount: data[3] as bigint,
-        productId: data[4] as bigint,
-        status: data[5] as EscrowStatus,
-        createdAt: data[6] as bigint,
-        disputeRaisedAt: data[7] as bigint,
-        resolver: data[8] as Address,
+        id: (data as readonly unknown[])[0] as bigint,
+        buyer: (data as readonly unknown[])[1] as Address,
+        seller: (data as readonly unknown[])[2] as Address,
+        amount: (data as readonly unknown[])[3] as bigint,
+        productId: (data as readonly unknown[])[4] as bigint,
+        status: (data as readonly unknown[])[5] as EscrowStatus,
+        createdAt: (data as readonly unknown[])[6] as bigint,
+        disputeRaisedAt: (data as readonly unknown[])[7] as bigint,
+        resolver: (data as readonly unknown[])[8] as Address,
       }
     : undefined;
 
@@ -139,6 +131,34 @@ export function useDisputeTimeRemaining(escrowId?: bigint) {
   };
 }
 
+export function useDisputeWindowDuration() {
+  const { data, isLoading, error } = useReadContract({
+    address: ESCROW_ADDRESS,
+    abi: EscrowAbi,
+    functionName: 'DISPUTE_WINDOW',
+  });
+
+  return {
+    disputeWindow: data as bigint | undefined,
+    isLoading,
+    error,
+  };
+}
+
+export function useMarketplaceAddress() {
+  const { data, isLoading, error } = useReadContract({
+    address: ESCROW_ADDRESS,
+    abi: EscrowAbi,
+    functionName: 'marketplace',
+  });
+
+  return {
+    marketplace: data as Address | undefined,
+    isLoading,
+    error,
+  };
+}
+
 export function useEscrowOwner() {
   const { data, isLoading, error } = useReadContract({
     address: ESCROW_ADDRESS,
@@ -170,311 +190,273 @@ export function useMarketplaceContract() {
 // ============ Setter Hooks (Write Operations) ============
 
 export function useReleasePayment() {
-  const [txState, setTxState] = useState<TransactionState>({
-    isLoading: false,
-    isSuccess: false,
-    isError: false,
-    error: null,
-    hash: undefined,
-    isPending: false,
-    isConfirming: false,
-  });
+  const { mutate, data: hash, error, isPending } = useWriteContract();
 
-  const { writeContract, data: hash, error, isPending } = useWriteContract();
-
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash,
-  });
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const releasePayment = useCallback(
-    async (escrowId: bigint) => {
-      setTxState({ ...txState, isLoading: true, isPending: true });
-      try {
-        writeContract({
-          address: ESCROW_ADDRESS,
-          abi: EscrowAbi,
-          functionName: 'releasePayment',
-          args: [escrowId],
-        });
-      } catch (err) {
-        setTxState({
-          isLoading: false,
-          isSuccess: false,
-          isError: true,
-          error: err as Error,
-          hash: undefined,
-          isPending: false,
-          isConfirming: false,
-        });
-      }
+    (escrowId: bigint) => {
+      mutate({
+        address: ESCROW_ADDRESS,
+        abi: EscrowAbi,
+        functionName: 'releasePayment',
+        args: [escrowId],
+      });
     },
-    [writeContract, txState]
+    [mutate]
   );
-
-  // Update state based on transaction status
-  if (hash && txState.hash !== hash) {
-    setTxState({ ...txState, hash, isPending: false, isConfirming: true });
-  }
-
-  if (isSuccess && !txState.isSuccess) {
-    setTxState({
-      isLoading: false,
-      isSuccess: true,
-      isError: false,
-      error: null,
-      hash,
-      isPending: false,
-      isConfirming: false,
-    });
-  }
-
-  if (error && !txState.isError) {
-    setTxState({
-      isLoading: false,
-      isSuccess: false,
-      isError: true,
-      error,
-      hash,
-      isPending: false,
-      isConfirming: false,
-    });
-  }
 
   return {
     releasePayment,
-    ...txState,
+    isLoading: isPending,
     isConfirming,
+    isSuccess,
+    isError: !!error,
+    error,
+    hash,
   };
 }
 
 export function useRefund() {
-  const [txState, setTxState] = useState<TransactionState>({
-    isLoading: false,
-    isSuccess: false,
-    isError: false,
-    error: null,
-    hash: undefined,
-    isPending: false,
-    isConfirming: false,
-  });
+  const { mutate, data: hash, error, isPending } = useWriteContract();
 
-  const { writeContract, data: hash, error, isPending } = useWriteContract();
-
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash,
-  });
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const refund = useCallback(
-    async (escrowId: bigint) => {
-      setTxState({ ...txState, isLoading: true, isPending: true });
-      try {
-        writeContract({
-          address: ESCROW_ADDRESS,
-          abi: EscrowAbi,
-          functionName: 'refund',
-          args: [escrowId],
-        });
-      } catch (err) {
-        setTxState({
-          isLoading: false,
-          isSuccess: false,
-          isError: true,
-          error: err as Error,
-          hash: undefined,
-          isPending: false,
-          isConfirming: false,
-        });
-      }
+    (escrowId: bigint) => {
+      mutate({
+        address: ESCROW_ADDRESS,
+        abi: EscrowAbi,
+        functionName: 'refund',
+        args: [escrowId],
+      });
     },
-    [writeContract, txState]
+    [mutate]
   );
-
-  if (hash && txState.hash !== hash) {
-    setTxState({ ...txState, hash, isPending: false, isConfirming: true });
-  }
-
-  if (isSuccess && !txState.isSuccess) {
-    setTxState({
-      isLoading: false,
-      isSuccess: true,
-      isError: false,
-      error: null,
-      hash,
-      isPending: false,
-      isConfirming: false,
-    });
-  }
-
-  if (error && !txState.isError) {
-    setTxState({
-      isLoading: false,
-      isSuccess: false,
-      isError: true,
-      error,
-      hash,
-      isPending: false,
-      isConfirming: false,
-    });
-  }
 
   return {
     refund,
-    ...txState,
+    isLoading: isPending,
     isConfirming,
+    isSuccess,
+    isError: !!error,
+    error,
+    hash,
   };
 }
 
 export function useRaiseDispute() {
-  const [txState, setTxState] = useState<TransactionState>({
-    isLoading: false,
-    isSuccess: false,
-    isError: false,
-    error: null,
-    hash: undefined,
-    isPending: false,
-    isConfirming: false,
-  });
+  const { mutate, data: hash, error, isPending } = useWriteContract();
 
-  const { writeContract, data: hash, error, isPending } = useWriteContract();
-
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash,
-  });
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const raiseDispute = useCallback(
-    async (escrowId: bigint) => {
-      setTxState({ ...txState, isLoading: true, isPending: true });
-      try {
-        writeContract({
-          address: ESCROW_ADDRESS,
-          abi: EscrowAbi,
-          functionName: 'raiseDispute',
-          args: [escrowId],
-        });
-      } catch (err) {
-        setTxState({
-          isLoading: false,
-          isSuccess: false,
-          isError: true,
-          error: err as Error,
-          hash: undefined,
-          isPending: false,
-          isConfirming: false,
-        });
-      }
+    (escrowId: bigint) => {
+      mutate({
+        address: ESCROW_ADDRESS,
+        abi: EscrowAbi,
+        functionName: 'raiseDispute',
+        args: [escrowId],
+      });
     },
-    [writeContract, txState]
+    [mutate]
   );
-
-  if (hash && txState.hash !== hash) {
-    setTxState({ ...txState, hash, isPending: false, isConfirming: true });
-  }
-
-  if (isSuccess && !txState.isSuccess) {
-    setTxState({
-      isLoading: false,
-      isSuccess: true,
-      isError: false,
-      error: null,
-      hash,
-      isPending: false,
-      isConfirming: false,
-    });
-  }
-
-  if (error && !txState.isError) {
-    setTxState({
-      isLoading: false,
-      isSuccess: false,
-      isError: true,
-      error,
-      hash,
-      isPending: false,
-      isConfirming: false,
-    });
-  }
 
   return {
     raiseDispute,
-    ...txState,
+    isLoading: isPending,
     isConfirming,
+    isSuccess,
+    isError: !!error,
+    error,
+    hash,
   };
 }
 
 export function useResolveDispute() {
-  const [txState, setTxState] = useState<TransactionState>({
-    isLoading: false,
-    isSuccess: false,
-    isError: false,
-    error: null,
-    hash: undefined,
-    isPending: false,
-    isConfirming: false,
-  });
+  const { mutate, data: hash, error, isPending } = useWriteContract();
 
-  const { writeContract, data: hash, error, isPending } = useWriteContract();
-
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash,
-  });
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const resolveDispute = useCallback(
-    async (escrowId: bigint, releaseToSeller: boolean) => {
-      setTxState({ ...txState, isLoading: true, isPending: true });
-      try {
-        writeContract({
-          address: ESCROW_ADDRESS,
-          abi: EscrowAbi,
-          functionName: 'resolveDispute',
-          args: [escrowId, releaseToSeller],
-        });
-      } catch (err) {
-        setTxState({
-          isLoading: false,
-          isSuccess: false,
-          isError: true,
-          error: err as Error,
-          hash: undefined,
-          isPending: false,
-          isConfirming: false,
-        });
-      }
+    (escrowId: bigint, releaseToSeller: boolean) => {
+      mutate({
+        address: ESCROW_ADDRESS,
+        abi: EscrowAbi,
+        functionName: 'resolveDispute',
+        args: [escrowId, releaseToSeller],
+      });
     },
-    [writeContract, txState]
+    [mutate]
   );
-
-  if (hash && txState.hash !== hash) {
-    setTxState({ ...txState, hash, isPending: false, isConfirming: true });
-  }
-
-  if (isSuccess && !txState.isSuccess) {
-    setTxState({
-      isLoading: false,
-      isSuccess: true,
-      isError: false,
-      error: null,
-      hash,
-      isPending: false,
-      isConfirming: false,
-    });
-  }
-
-  if (error && !txState.isError) {
-    setTxState({
-      isLoading: false,
-      isSuccess: false,
-      isError: true,
-      error,
-      hash,
-      isPending: false,
-      isConfirming: false,
-    });
-  }
 
   return {
     resolveDispute,
-    ...txState,
+    isLoading: isPending,
     isConfirming,
+    isSuccess,
+    isError: !!error,
+    error,
+    hash,
+  };
+}
+
+export function useEmergencyWithdraw() {
+  const { mutate, data: hash, error, isPending } = useWriteContract();
+
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({hash});
+
+  const emergencyWithdraw = useCallback(
+    (to: Address, amount: bigint) => {
+      mutate({
+        address: ESCROW_ADDRESS,
+        abi: EscrowAbi,
+        functionName: 'emergencyWithdraw',
+        args: [to, amount],
+      });
+    },
+    [mutate]
+  );
+
+  return{
+    emergencyWithdraw,
+    isLoading: isPending,
+    isConfirming,
+    isSuccess,
+    isError: !!error,
+    error,
+    hash,
+  };
+}
+
+export function useCreateEscrow() {
+  const { mutate, data: hash, error, isPending } = useWriteContract();
+
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+
+  const createEscrow = useCallback(
+    (buyer: Address, seller: Address, productId: bigint, amount: bigint) => {
+      mutate({
+        address: ESCROW_ADDRESS,
+        abi: EscrowAbi,
+        functionName: 'createEscrow',
+        args: [buyer, seller, productId],
+        value: amount,
+      });
+    },
+    [mutate]
+  );
+
+  return {
+    createEscrow,
+    isLoading: isPending,
+    isConfirming,
+    isSuccess,
+    isError: !!error,
+    error,
+    hash,
+  };
+}
+
+export function useSetEscrowMarketplace() {
+  const { mutate, data: hash, error, isPending } = useWriteContract();
+
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+
+  const setMarketplace = useCallback(
+    (marketplaceAddress: Address) => {
+      mutate({
+        address: ESCROW_ADDRESS,
+        abi: EscrowAbi,
+        functionName: 'setMarketplace',
+        args: [marketplaceAddress],
+      });
+    },
+    [mutate]
+  );
+
+  return {
+    setMarketplace,
+    isLoading: isPending,
+    isConfirming,
+    isSuccess,
+    isError: !!error,
+    error,
+    hash,
+  };
+}
+
+export function useTransferEscrowOwnership() {
+  const { mutate, data: hash, error, isPending } = useWriteContract();
+
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+
+  const transferOwnership = useCallback(
+    (newOwner: Address) => {
+      mutate({
+        address: ESCROW_ADDRESS,
+        abi: EscrowAbi,
+        functionName: 'transferOwnership',
+        args: [newOwner],
+      });
+    },
+    [mutate]
+  );
+
+  return {
+    transferOwnership,
+    isLoading: isPending,
+    isConfirming,
+    isSuccess,
+    isError: !!error,
+    error,
+    hash,
+  };
+}
+
+// ============ Escrow Counter Hook ============
+
+export function useEscrowCounter() {
+  const { data: escrowCounter, error, isLoading } = useReadContract({
+    address: ESCROW_ADDRESS,
+    abi: EscrowAbi,
+    functionName: 'escrowCounter',
+  });
+
+  return {
+    escrowCounter,
+    isLoading,
+    error: error ? (error as BaseError) : null,
+  };
+}
+
+// ============ Set Escrow Contract Hook ============
+
+export function useSetEscrowContract() {
+  const { mutate, data: hash, error, isPending } = useWriteContract();
+
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({hash});
+
+  const setEscrowContract = useCallback(
+    (newEscrowAddress: Address) => {
+      mutate({
+        address: ESCROW_ADDRESS,
+        abi: EscrowAbi,
+        functionName: 'setEscrowContract',
+        args: [newEscrowAddress],
+      });
+    },
+    [mutate]
+  );
+
+  return{
+    setEscrowContract,
+    isLoading: isPending,
+    isConfirming,
+    isSuccess,
+    isError: !!error,
+    error,
+    hash,
   };
 }
 
@@ -487,13 +469,25 @@ export function useEscrow() {
   const { escrowIds: buyerEscrowIds } = useBuyerEscrows(address);
   const { escrowIds: sellerEscrowIds } = useSellerEscrows(address);
   const { owner } = useEscrowOwner();
-  const isOwner = address && owner ? address === owner : false;
+  const isOwner = address && owner ? address.toLowerCase() === owner.toLowerCase() : false;
 
   // Setters
   const releasePaymentTx = useReleasePayment();
   const refundTx = useRefund();
   const raiseDisputeTx = useRaiseDispute();
-  const resolveDisputeTx = useResolveDispute();
+  const { resolveDispute } = useResolveDispute();
+  const { emergencyWithdraw } = useEmergencyWithdraw();
+  const { escrowCounter } = useEscrowCounter();
+  const { setEscrowContract } = useSetEscrowContract();
+  
+  // Additional getters
+  const { disputeWindow } = useDisputeWindowDuration();
+  const { marketplace } = useMarketplaceAddress();
+  
+  // Admin setters
+  const createEscrowTx = useCreateEscrow();
+  const { setMarketplace: setMarketplaceTx } = useSetEscrowMarketplace();
+  const { transferOwnership: transferOwnershipTx } = useTransferEscrowOwnership();
 
   return {
     // User data
@@ -511,6 +505,14 @@ export function useEscrow() {
     refund: refundTx,
 
     // Admin operations
-    resolveDispute: resolveDisputeTx,
+    resolveDispute,
+    emergencyWithdraw,
+    setEscrowContract,
+    escrowCounter,
+    disputeWindow,
+    marketplace,
+    createEscrow: createEscrowTx,
+    setMarketplace: setMarketplaceTx,
+    transferOwnership: transferOwnershipTx,
   };
 }

@@ -12,7 +12,6 @@ import { BuyerDashboard } from '@/components/dashboard/BuyerDashboard';
 
 export default function Dashboard() {
   const { address, isConnected } = useConnection();
-  const [activeTab, setActiveTab] = useState('overview');
   const [selectedUser, setSelectedUser] = useState(null);
 
   // Contract hooks
@@ -33,6 +32,31 @@ export default function Dashboard() {
 
   // Compute role directly instead of using useEffect
   const userRole = isOwner ? 'ADMIN' : isSeller ? 'SELLER' : 'BUYER';
+
+  // Get tabs based on user role
+  const getRoleTabs = () => {
+    switch (userRole) {
+      case 'ADMIN':
+        return ['escrows', 'disputes', 'settings'];
+      case 'SELLER':
+        return ['products', 'orders', 'escrows', 'store'];
+      case 'BUYER':
+        return ['orders', 'escrows'];
+      default:
+        return ['overview'];
+    }
+  };
+
+  const roleTabs = getRoleTabs();
+
+  const [activeTab, setActiveTab] = useState(() => {
+    const defaultTabs = {
+      'ADMIN': 'escrows',
+      'SELLER': 'products', 
+      'BUYER': 'orders'
+    };
+    return defaultTabs[userRole] || 'overview';
+  });
 
 
   if (!isConnected) {
@@ -57,15 +81,13 @@ export default function Dashboard() {
       case 'ADMIN':
         return (
           <AdminDashboard 
-            allProducts={allProducts}
-            buyerOrders={buyerOrders}
-            buyerEscrows={buyerEscrows}
+            activeTab={activeTab}
           />
         );
       case 'SELLER':
         return (
           <SellerDashboard 
-            isSeller={isSeller}
+            isSeller={true}
             seller={seller}
             sellerProducts={sellerProducts}
             sellerOrders={sellerOrders}
@@ -121,7 +143,7 @@ export default function Dashboard() {
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4">
           <nav className="flex space-x-8">
-            {['overview', 'analytics', 'settings'].map((tab) => (
+            {roleTabs.map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}

@@ -9,7 +9,6 @@ export function ProductCard({
   showSeller = true, 
   showActions = true,
   onViewDetails,
-  onAddToCart 
 }: ProductCardProps) {
   const { addToCart, isInCart } = useCart();
   

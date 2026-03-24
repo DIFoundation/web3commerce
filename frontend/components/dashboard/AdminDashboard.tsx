@@ -1,137 +1,431 @@
 'use client';
 
-import { formatEther } from 'viem';
-
-// Mock data - replace with real data
-const mockUsers = [
-  { id: 1, name: 'Alice', email: 'alice@example.com', role: 'SELLER', status: 'ACTIVE', joinDate: '2024-01-15', revenue: '125,500 CELO' },
-  { id: 2, name: 'Bob', email: 'bob@example.com', role: 'BUYER', status: 'ACTIVE', joinDate: '2024-02-20', spent: '45,200 CELO' },
-  { id: 3, name: 'Charlie', email: 'charlie@example.com', role: 'ADMIN', status: 'ACTIVE', joinDate: '2024-01-10' },
-  { id: 4, name: 'Diana', email: 'diana@example.com', role: 'SELLER', status: 'PENDING', joinDate: '2024-03-05', revenue: '89,300 CELO' },
-];
-
-const mockTransactions = [
-  { id: 1, type: 'ORDER', user: 'Alice', amount: '2,500 CELO', status: 'COMPLETED', date: '2024-03-15', hash: '0x1234...5678' },
-  { id: 2, type: 'PAYMENT', user: 'Bob', amount: '1,200 CELO', status: 'PENDING', date: '2024-03-16', hash: '0x8765...4321' },
-  { id: 3, type: 'REFUND', user: 'Charlie', amount: '500 CELO', status: 'COMPLETED', date: '2024-03-14', hash: '0x9876...1234' },
-];
+import { useState } from 'react';
+import { useEscrow, useEscrowData, useDisputeWindowOpen, useDisputeTimeRemaining } from '@/hooks/useEscrow';
+import { useMarketplace } from '@/hooks/useMarketplace';
 
 interface AdminDashboardProps {
-  allProducts: any[];
-  buyerOrders: any[];
-  buyerEscrows: any[];
+  activeTab: string;
 }
 
-export function AdminDashboard({ allProducts, buyerOrders, buyerEscrows }: AdminDashboardProps) {
-  const StatCard = ({ title, value, change, icon }: { title: string; value: string; change?: string; icon: string }) => (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
-          {change && (
-            <p className={`text-sm font-medium ${change.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
-              {change}
-            </p>
-          )}
+export function AdminDashboard({ activeTab }: AdminDashboardProps) {
+  const { 
+    escrowCounter, 
+    resolveDispute, 
+    setEscrowContract, 
+    emergencyWithdraw,
+    disputeWindow,
+    marketplace: escrowMarketplace,
+    // createEscrow,
+    setMarketplace: setEscrowMarketplace,
+    transferOwnership: transferEscrowOwnership
+  } = useEscrow();
+  const { 
+    orderCounter, 
+    productCounter, 
+    escrowContract: marketplaceEscrowContract, 
+    marketplaceOwner,
+    // setEscrowContract: setMarketplaceEscrowContract,
+    // transferOwnership: transferMarketplaceOwnership 
+  } = useMarketplace();
+  
+  // State for escrow operations
+  const [escrowId, setEscrowId] = useState('');
+  const [disputeEscrowId, setDisputeEscrowId] = useState('');
+  
+  // Hooks for specific escrow data (used when escrowId is provided)
+  const { escrow } = useEscrowData(escrowId ? BigInt(escrowId) : BigInt(0));
+  const { isOpen: isDisputeWindowOpen } = useDisputeWindowOpen(escrowId ? BigInt(escrowId) : BigInt(0));
+  const { remainingSeconds: getDisputeTimeRemaining } = useDisputeTimeRemaining(escrowId ? BigInt(escrowId) : BigInt(0));
+  const [newMarketplaceAddress, setNewMarketplaceAddress] = useState('');
+  const [newOwnerAddress, setNewOwnerAddress] = useState('');
+  const [newEscrowAddress, setNewEscrowAddress] = useState('');
+  const [loading, setLoading] = useState(false);
+  
+  // Emergency withdraw state
+  const [emergencyWithdrawTo, setEmergencyWithdrawTo] = useState('');
+  const [emergencyWithdrawAmount, setEmergencyWithdrawAmount] = useState('');
+  
+  const handleGetEscrow = async () => {
+    if (!escrowId) return;
+    setLoading(true);
+    try {
+      // Escrow data is now available directly from the useEscrowData hook
+      console.log('Escrow data:', escrow);
+    } catch (error) {
+      console.error('Error fetching escrow:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handleResolveDispute = async () => {
+    if (!disputeEscrowId) return;
+    setLoading(true);
+    try {
+      // create an option to choose true or false
+      await resolveDispute(BigInt(disputeEscrowId), true);
+    } catch (error) {
+      console.error('Error resolving dispute:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handleEmergencyWithdraw = async () => {
+    if (!emergencyWithdrawTo || !emergencyWithdrawAmount) return;
+    setLoading(true);
+    try {
+      await emergencyWithdraw(emergencyWithdrawTo as `0x${string}`, BigInt(emergencyWithdrawAmount));
+      setEmergencyWithdrawTo('');
+      setEmergencyWithdrawAmount('');
+    } catch (error) {
+      console.error('Error emergency withdraw:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handleCreateEscrow = async () => {
+    // This would need buyer, seller, productId, amount parameters
+    // For now, just a placeholder
+    console.log('Create escrow function called');
+  };
+  
+  const handleSetEscrowMarketplace = async () => {
+    if (!newEscrowAddress) return;
+    setLoading(true);
+    try {
+      await setEscrowMarketplace(newEscrowAddress as `0x${string}`);
+    } catch (error) {
+      console.error('Error setting escrow marketplace:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handleTransferEscrowOwnership = async () => {
+    if (!newOwnerAddress) return;
+    setLoading(true);
+    try {
+      await transferEscrowOwnership(newOwnerAddress as `0x${string}`);
+    } catch (error) {
+      console.error('Error transferring escrow ownership:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handleSetEscrowContract = async () => {
+    if (!newEscrowAddress) return;
+    setLoading(true);
+    try {
+      await setEscrowContract(newEscrowAddress as `0x${string}`);
+    } catch (error) {
+      console.error('Error setting escrow contract:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const renderEscrowsTab = () => (
+    <div className="space-y-6">
+      {/* Escrow Statistics */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Escrow Statistics</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-blue-50 rounded-lg p-4">
+            <p className="text-sm font-medium text-blue-600">Total Escrows</p>
+            <p className="text-2xl font-bold text-blue-900">{escrowCounter?.toString() || '0'}</p>
+          </div>
+          <div className="bg-green-50 rounded-lg p-4">
+            <p className="text-sm font-medium text-green-600">Dispute Window</p>
+            <p className="text-2xl font-bold text-green-900">{disputeWindow?.toString() || '0'}s</p>
+          </div>
+          <div className="bg-purple-50 rounded-lg p-4">
+            <p className="text-sm font-medium text-purple-600">Marketplace Contract</p>
+            <p className="text-sm font-bold text-purple-900 truncate">{escrowMarketplace || 'Not set'}</p>
+          </div>
         </div>
-        <div className="text-2xl text-gray-400">
-          {icon}
+      </div>
+      
+      {/* Browse Escrows */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Browse Escrows</h3>
+        <div className="flex gap-4 mb-4">
+          <input
+            type="text"
+            placeholder="Enter Escrow ID"
+            value={escrowId}
+            onChange={(e) => setEscrowId(e.target.value)}
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            onClick={handleGetEscrow}
+            disabled={loading || !escrowId}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Loading...' : 'Get Escrow'}
+          </button>
+        </div>
+        {escrow && (
+          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+            <h4 className="font-semibold mb-2">Escrow Details</h4>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div><strong>ID:</strong> {escrow.id.toString()}</div>
+              <div><strong>Buyer:</strong> {escrow.buyer}</div>
+              <div><strong>Seller:</strong> {escrow.seller}</div>
+              <div><strong>Amount:</strong> {escrow.amount.toString()}</div>
+              <div><strong>Product ID:</strong> {escrow.productId.toString()}</div>
+              <div><strong>Status:</strong> {escrow.status}</div>
+              <div><strong>Created:</strong> {new Date(Number(escrow.createdAt) * 1000).toLocaleString()}</div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+  
+  const renderDisputesTab = () => (
+    <div className="space-y-6">
+      {/* Resolve Disputes */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Resolve Disputes</h3>
+        <div className="space-y-4">
+          <div className="flex gap-4">
+            <input
+              type="text"
+              placeholder="Enter Escrow ID to Resolve"
+              value={disputeEscrowId}
+              onChange={(e) => setDisputeEscrowId(e.target.value)}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              onClick={handleResolveDispute}
+              disabled={loading || !disputeEscrowId}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Resolving...' : 'Resolve Dispute'}
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      {/* Dispute Window Info */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Dispute Window Information</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-yellow-50 rounded-lg p-4">
+            <p className="text-sm font-medium text-yellow-600">Dispute Window Status</p>
+            <p className="text-lg font-bold text-yellow-900">
+              {isDisputeWindowOpen ? 'Open' : 'Closed'}
+            </p>
+          </div>
+          <div className="bg-purple-50 rounded-lg p-4">
+            <p className="text-sm font-medium text-purple-600">Time Remaining</p>
+            <p className="text-lg font-bold text-purple-900">
+              {getDisputeTimeRemaining ? `${getDisputeTimeRemaining} seconds` : 'N/A'}
+            </p>
+          </div>
         </div>
       </div>
     </div>
   );
-
+  
+  const renderSettingsTab = () => (
+    <div className="space-y-6">
+      {/* Marketplace Contract Settings */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Marketplace Contract Settings</h3>
+        <div className="space-y-6">
+          {/* Set Marketplace */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Set Marketplace Contract</label>
+            <div className="flex gap-4">
+              <input
+                type="text"
+                placeholder="New Marketplace Address"
+                value={newMarketplaceAddress}
+                onChange={(e) => setNewMarketplaceAddress(e.target.value)}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                onClick={handleSetEscrowContract}
+                disabled={loading || !newMarketplaceAddress}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Setting...' : 'Set Marketplace'}
+              </button>
+            </div>
+          </div>
+          
+          {/* Transfer Marketplace Ownership */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Transfer Marketplace Ownership</label>
+            <div className="flex gap-4">
+              <input
+                type="text"
+                placeholder="New Owner Address"
+                value={newOwnerAddress}
+                onChange={(e) => setNewOwnerAddress(e.target.value)}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                onClick={handleTransferEscrowOwnership}
+                disabled={loading || !newOwnerAddress}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Transferring...' : 'Transfer Ownership'}
+              </button>
+            </div>
+          </div>
+          
+          {/* Marketplace Statistics */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-orange-50 rounded-lg p-4">
+              <p className="text-sm font-medium text-orange-600">Total Orders</p>
+              <p className="text-2xl font-bold text-orange-900">{orderCounter?.toString() || '0'}</p>
+            </div>
+            <div className="bg-pink-50 rounded-lg p-4">
+              <p className="text-sm font-medium text-pink-600">Total Products</p>
+              <p className="text-2xl font-bold text-pink-900">{productCounter?.toString() || '0'}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Escrow Contract Settings */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Escrow Contract Settings</h3>
+        <div className="space-y-6">
+          {/* Set Escrow Contract Marketplace */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Set Escrow Marketplace</label>
+            <div className="flex gap-4">
+              <input
+                type="text"
+                placeholder="New Marketplace Address"
+                value={newEscrowAddress}
+                onChange={(e) => setNewEscrowAddress(e.target.value)}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                onClick={handleSetEscrowMarketplace}
+                disabled={loading || !newEscrowAddress}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Setting...' : 'Set Escrow Marketplace'}
+              </button>
+            </div>
+          </div>
+          
+          {/* Transfer Escrow Ownership */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Transfer Escrow Ownership</label>
+            <div className="flex gap-4">
+              <input
+                type="text"
+                placeholder="New Owner Address"
+                value={newOwnerAddress}
+                onChange={(e) => setNewOwnerAddress(e.target.value)}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                onClick={handleTransferEscrowOwnership}
+                disabled={loading || !newOwnerAddress}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Transferring...' : 'Transfer Ownership'}
+              </button>
+            </div>
+          </div>
+          
+          {/* Contract Info */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-gray-50 rounded-lg p-4">
+              <p className="text-sm font-medium text-gray-600">Current Marketplace</p>
+              <p className="text-sm font-bold text-gray-900 truncate">{marketplaceEscrowContract || 'Not set'}</p>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-4">
+              <p className="text-sm font-medium text-gray-600">Current Owner</p>
+              <p className="text-sm font-bold text-gray-900 truncate">{marketplaceOwner || 'Not set'}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+  
+  const renderEmergencyTab = () => (
+    <div className="space-y-6">
+      {/* Emergency Withdraw */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Emergency Functions</h3>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Emergency Withdraw</label>
+            <div className="space-y-2">
+              <input
+                type="text"
+                placeholder="Recipient Address (0x...)"
+                value={emergencyWithdrawTo}
+                onChange={(e) => setEmergencyWithdrawTo(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <input
+                type="text"
+                placeholder="Amount (in wei)"
+                value={emergencyWithdrawAmount}
+                onChange={(e) => setEmergencyWithdrawAmount(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                onClick={handleEmergencyWithdraw}
+                disabled={loading || !emergencyWithdrawTo || !emergencyWithdrawAmount}
+                className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Withdrawing...' : 'Emergency Withdraw'}
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">⚠️ Use only in emergency situations to withdraw specified amount to recipient</p>
+          </div>
+          
+          {/* Create Escrow */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Create Escrow</label>
+            <button
+              onClick={handleCreateEscrow}
+              disabled={loading}
+              className="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Creating...' : 'Create Escrow (Admin)'}
+            </button>
+            <p className="text-xs text-gray-500 mt-2">Create new escrow as admin (requires buyer, seller, productId, amount)</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+  
+  // Render content based on active tab
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'escrows':
+        return renderEscrowsTab();
+      case 'disputes':
+        return renderDisputesTab();
+      case 'settings':
+        return renderSettingsTab();
+      case 'emergency':
+        return renderEmergencyTab();
+      default:
+        return renderEscrowsTab();
+    }
+  };
+  
   return (
     <div className="space-y-6">
-      {/* Overview Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title="Total Products" value={allProducts?.length?.toString() || '0'} icon="📦" />
-        <StatCard title="Total Orders" value={buyerOrders?.length?.toString() || '0'} icon="🛒" />
-        <StatCard title="Active Sellers" value="89" icon="🏪" />
-        <StatCard title="Escrow Transactions" value={(buyerEscrows?.length || 0).toString()} icon="🔄" />
-      </div>
-
-      {/* User Management */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">User Management</h3>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {mockUsers.map((user) => (
-                <tr key={user.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
-                        <span className="text-xs">👤</span>
-                      </div>
-                      <div className="ml-3">
-                        <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                        <div className="text-xs text-gray-500">{user.email}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      user.role === 'ADMIN' ? 'bg-purple-100 text-purple-800' :
-                      user.role === 'SELLER' ? 'bg-blue-100 text-blue-800' :
-                      'bg-green-100 text-green-800'
-                    }`}>
-                      {user.role}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      user.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {user.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button className="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
-                    {user.status === 'ACTIVE' && (
-                      <button className="text-red-600 hover:text-red-900">Suspend</button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Recent Transactions */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Escrow Transactions</h3>
-        <div className="space-y-3">
-          {mockTransactions.slice(0, 5).map((transaction) => (
-            <div key={transaction.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className={`w-2 h-2 rounded-full ${
-                  transaction.status === 'COMPLETED' ? 'bg-green-500' :
-                  transaction.status === 'PENDING' ? 'bg-yellow-500' : 'bg-red-500'
-                }`} />
-                <div>
-                  <div className="text-sm font-medium text-gray-900">{transaction.type}</div>
-                  <div className="text-xs text-gray-500">{transaction.user}</div>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-sm font-medium text-gray-900">{transaction.amount}</div>
-                <div className="text-xs text-gray-500">{transaction.date}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      {renderTabContent()}
     </div>
   );
 }
