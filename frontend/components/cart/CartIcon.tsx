@@ -7,7 +7,7 @@ import { ConnectWallet } from '@/components/auth/ConnectWallet';
 
 export function CartIcon() {
   const { cart, isInCart } = useCart();
-  const { isConnected } = useConnection();
+  const { isConnected, status } = useConnection();
   const router = useRouter();
 
   return (

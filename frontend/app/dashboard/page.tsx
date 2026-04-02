@@ -9,25 +9,24 @@ import { AdminDashboard } from '@/components/dashboard/AdminDashboard';
 import { SellerDashboard } from '@/components/dashboard/SellerDashboard';
 import { BuyerDashboard } from '@/components/dashboard/BuyerDashboard';
 
-
 export default function Dashboard() {
   const { address, isConnected } = useConnection();
   const [selectedUser, setSelectedUser] = useState(null);
 
   // Contract hooks
-  const { 
-    isSeller, 
-    seller, 
-    sellerProducts, 
-    buyerOrders, 
+  const {
+    isSeller,
+    seller,
+    sellerProducts,
+    buyerOrders,
     sellerOrders,
     allProducts,
-    loadingAllProducts 
+    loadingAllProducts,
   } = useMarketplaceHook();
-  const { 
-    buyerEscrows, 
-    sellerEscrows, 
-    isOwner 
+  const {
+    buyerEscrows,
+    sellerEscrows,
+    isOwner
   } = useEscrowHook();
 
   // Compute role directly instead of using useEffect
@@ -52,7 +51,7 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState(() => {
     const defaultTabs = {
       'ADMIN': 'escrows',
-      'SELLER': 'products', 
+      'SELLER': 'products',
       'BUYER': 'orders'
     };
     return defaultTabs[userRole] || 'overview';
@@ -80,13 +79,14 @@ export default function Dashboard() {
     switch (userRole) {
       case 'ADMIN':
         return (
-          <AdminDashboard 
+          <AdminDashboard
             activeTab={activeTab}
           />
         );
       case 'SELLER':
         return (
-          <SellerDashboard 
+          <SellerDashboard
+            activeTab={activeTab}
             isSeller={true}
             seller={seller}
             sellerProducts={sellerProducts}
@@ -97,7 +97,7 @@ export default function Dashboard() {
         );
       case 'BUYER':
         return (
-          <BuyerDashboard 
+          <BuyerDashboard
             buyerOrders={buyerOrders}
             buyerEscrows={buyerEscrows}
             allProducts={allProducts}
@@ -105,7 +105,7 @@ export default function Dashboard() {
         );
       default:
         return (
-          <BuyerDashboard 
+          <BuyerDashboard
             buyerOrders={buyerOrders}
             buyerEscrows={buyerEscrows}
             allProducts={allProducts}
@@ -123,10 +123,9 @@ export default function Dashboard() {
             <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${
-                  userRole === 'ADMIN' ? 'bg-purple-500' :
+                <div className={`w-2 h-2 rounded-full ${userRole === 'ADMIN' ? 'bg-purple-500' :
                   userRole === 'SELLER' ? 'bg-blue-500' : 'bg-green-500'
-                }`} />
+                  }`} />
                 <span className="text-sm font-medium text-gray-700">
                   {userRole} Dashboard
                 </span>
@@ -147,11 +146,10 @@ export default function Dashboard() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  activeTab === tab
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
               >
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
               </button>

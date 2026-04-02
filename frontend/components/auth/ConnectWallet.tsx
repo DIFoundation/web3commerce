@@ -19,7 +19,7 @@ export function ConnectWallet({ className = '' }: ConnectWalletProps) {
     login, 
     logout,
     getUserInfo,
-    loginMethod 
+    loginMethod,
   } = useAuth();
   const { mutate } = useDisconnect();
 

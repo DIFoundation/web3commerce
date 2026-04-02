@@ -12,6 +12,10 @@ import { Navbar } from "@/components/shared/Navbar";
 export const metadata: Metadata = {
   title: "Web3Commerce",
   description: "Decentralized multi-vendor marketplace with escrow",
+  other: {
+    "name": "talentapp:project_verification",
+    "content": "055d3c212e609c00f599b7c4dc17cb67f2dddc3125909bc953611c182a35bef3e1527f07672acb8c8fadc4cc03f9fcafb83b9fc21ca1052300cc2bbc08ac06b6"
+  }
 };
 
 export default function RootLayout({

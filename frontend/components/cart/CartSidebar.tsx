@@ -19,7 +19,7 @@ export function CartSidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () 
   };
 
   const subtotal = cart.totalAmount;
-  const shippingFee = cart.totalItems > 0 ? BigInt(0.001 * 1e18) : BigInt(0); // 0.001 CELO shipping
+  const shippingFee = cart.totalItems > 0 ? BigInt(0.001 * 1e18) : BigInt(0); // 0.001 CELO shipping fee
   const total = subtotal + shippingFee;
 
   return (

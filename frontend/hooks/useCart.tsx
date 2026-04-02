@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Cart, CartItem, Product } from '@/types';
+import { Cart, CartItem } from '@/types';
 import { useMarketplace } from '@/hooks/useMarketplace';
 import { useConnection } from 'wagmi';
 
@@ -63,7 +63,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             ...parsedCart,
             totalAmount: BigInt(parsedCart.totalAmount),
             updatedAt: new Date(parsedCart.updatedAt),
-            items: parsedCart.items.map((item: any) => ({
+            items: parsedCart.items.map((item: CartItem) => ({
               ...item,
               addedAt: new Date(item.addedAt),
               product: {

@@ -2,6 +2,7 @@ import { useConnection, useReadContract, useWriteContract, useWaitForTransaction
 import { MarketplaceAbi } from '@/lib/contracts';
 import { useCallback } from 'react';
 import { Address, parseEther } from 'viem';
+import { Seller } from '@/types'
 
 const MARKETPLACE_ADDRESS = process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS as Address;
 
@@ -14,14 +15,6 @@ export enum OrderStatus {
   COMPLETED = 3,
   REFUNDED = 4,
   CANCELLED = 5,
-}
-
-export interface Seller {
-  sellerAddress: Address;
-  storeName: string;
-  description: string;
-  isActive: boolean;
-  registeredAt: bigint;
 }
 
 export interface Product {
@@ -88,15 +81,7 @@ export function useSeller(address?: Address) {
     },
   });
 
-  const seller = data
-    ? {
-        sellerAddress: (data as readonly unknown[])[0] as Address,
-        storeName: (data as readonly unknown[])[1] as string,
-        description: (data as readonly unknown[])[2] as string,
-        isActive: (data as readonly unknown[])[3] as boolean,
-        registeredAt: (data as readonly unknown[])[4] as bigint,
-      }
-    : undefined;
+  const seller: Seller = data as Seller;
 
   return { seller, isLoading, error };
 }

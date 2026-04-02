@@ -8,7 +8,6 @@ interface BuyerDashboardProps {
   allProducts: any[];
 }
 
-export function BuyerDashboard({ buyerOrders, buyerEscrows, allProducts }: BuyerDashboardProps) {
   const StatCard = ({ title, value, change, icon }: { title: string; value: string; change?: string; icon: string }) => (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <div className="flex items-center justify-between">
@@ -27,7 +26,8 @@ export function BuyerDashboard({ buyerOrders, buyerEscrows, allProducts }: Buyer
       </div>
     </div>
   );
-
+  
+export function BuyerDashboard({ buyerOrders, buyerEscrows, allProducts }: BuyerDashboardProps) {
   return (
     <div className="space-y-6">
       {/* Overview Stats */}
