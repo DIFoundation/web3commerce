@@ -7,7 +7,7 @@ interface SellerDashboardProps {
   activeTab: string;
   isSeller: boolean;
   seller: Seller;
-  sellerProducts: Product[];
+  sellerProducts: any[];
   sellerOrders: any[];
   sellerEscrows: any[];
   allProducts: any[];
