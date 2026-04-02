@@ -152,11 +152,11 @@ export function SellerDashboard({ activeTab,
         </div>
         <div className="flex justify-between">
           <span className="text-sm text-gray-600">Store Description</span>
-          <span className="text-sm font-medium text-gray-900">{seller?.description || 'Not Registered'}</span>
+          <span className="text-sm font-medium text-gray-900">{seller?.storeDescription || 'Not Registered'}</span>
         </div>
         <div className="flex justify-between">
           <span className="text-sm text-gray-600">Store URL</span>
-          <span className="text-sm font-medium text-gray-900">{seller?.storeUrl || 'No URL'}</span>
+          <span className="text-sm font-medium text-gray-900">{seller?.address || 'No URL'}</span>
         </div>
         <div className="flex justify-between">
           <span className="text-sm text-gray-600">Status</span>
