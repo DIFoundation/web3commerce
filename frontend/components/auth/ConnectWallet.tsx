@@ -55,7 +55,7 @@ export function ConnectWallet({ className = '' }: ConnectWalletProps) {
     return (
       <div className={`relative ${className}`}>
         <div 
-          className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors"
+          className="flex items-center gap-3 cursor-pointer bg-gray-200 hover:bg-gray-300 rounded-lg px-3 py-2 transition-colors"
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
         >
           {/* User Avatar */}
@@ -88,7 +88,7 @@ export function ConnectWallet({ className = '' }: ConnectWalletProps) {
 
         {/* Dropdown Menu */}
         {isDropdownOpen && (
-          <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+          <div className="absolute top-full right-0 mt-2 w-full bg-white rounded-lg shadow-lg border border-gray-200 px-3 py-2 z-50">
             <div className="flex flex-col items-start gap-2 px-4 py-2 text-sm">
               <div>
                 <p>{userInfo?.email || 'No email linked'}</p>
@@ -103,7 +103,7 @@ export function ConnectWallet({ className = '' }: ConnectWalletProps) {
             
             <Link
               href="/dashboard"
-              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:rounded transition-colors"
               onClick={() => setIsDropdownOpen(false)}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -117,7 +117,7 @@ export function ConnectWallet({ className = '' }: ConnectWalletProps) {
                 navigator.clipboard.writeText(address);
                 setIsDropdownOpen(false);
               }}
-              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:rounded transition-colors"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -133,7 +133,7 @@ export function ConnectWallet({ className = '' }: ConnectWalletProps) {
                 logout();
                 setIsDropdownOpen(false);
               }}
-              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-100 hover:rounded transition-colors"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

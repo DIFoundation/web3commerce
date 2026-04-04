@@ -46,7 +46,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen pt-20">
       {/* Hero Section */}
       <section className="bg-linear-to-l from-gray-950 to-gray-900 text-white rounded-4xl">
         <div className="max-w-7xl mx-auto px-4 py-20">

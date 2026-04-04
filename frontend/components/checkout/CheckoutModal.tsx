@@ -82,7 +82,7 @@ export default function CheckoutModal({ isOpen, onClose }: { isOpen: boolean; on
 
   return (
     <>
-    {/* Modal */}between
+    {/* Modal */}
     {isOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-3xl w-full min-h-[80vh] overflow-y-auto flex flex-col">
