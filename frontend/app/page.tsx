@@ -3,6 +3,7 @@
 import { useMarketplace } from '@/hooks/useMarketplace';
 import { ConnectWallet } from '@/components/auth/ConnectWallet';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function LandingPage() {
   const { loadingAllProducts, allProducts } = useMarketplace();
@@ -47,26 +48,43 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <section className="bg-linear-to-br from-blue-600 via-purple-600 to-pink-600 text-white">
+      <section className="bg-linear-to-l from-gray-950 to-gray-900 text-white rounded-4xl">
         <div className="max-w-7xl mx-auto px-4 py-20">
-          <div className="text-center">
-            <h1 className="text-5xl font-bold mb-6 leading-tight">
-              Shop with Crypto<br />
-              <span className="text-blue-100">Seamlessly</span>
-            </h1>
-            <p className="text-xl mb-8 text-blue-100 max-w-2xl mx-auto">
-              Discover amazing products from trusted sellers. Pay with crypto, 
-              enjoy secure escrow protection, and experience the future of e-commerce.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/marketplace"
-                className="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition-all transform hover:scale-105"
-              >
-                Explore Marketplace
-              </Link>
-              <div className="flex items-center">
-                <ConnectWallet className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-4 rounded-lg font-semibold transition-all transform hover:scale-105" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <div className="text-sm font-medium text-gray-400 mb-4 tracking-wider uppercase">
+                Number #1 Blockchain Marketplace
+              </div>
+              <h1 className="text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+                Shop Seamlessly<br />
+                <span className="text-gray-300">Across Blockchains.</span>
+              </h1>
+              <p className="text-lg mb-8 text-gray-400 max-w-lg">
+                Discover amazing products from trusted sellers. Pay with crypto, 
+                enjoy secure escrow protection, and experience the future of e-commerce.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link
+                  href="/marketplace"
+                  className="bg-white text-black px-8 py-4 rounded-lg font-semibold hover:bg-gray-200 transition-all transform hover:scale-105 inline-flex items-center"
+                >
+                  Explore Assets →
+                </Link>
+              </div>
+            </div>
+            <div className="flex justify-center lg:justify-end">
+              <div className="relative">
+                {/* <div className="w-full max-w-md h-96 bg-gray-900 rounded-lg flex items-center justify-center"> */}
+                  <Image
+                    src="/banner.png"
+                    alt="Product"
+                    width={400}
+                    height={400}
+                    className="object-cover"
+                  />
+                {/* </div> */}
+                <div className="absolute -top-4 -right-4 w-8 h-8 bg-blue-500 rounded-full animate-pulse"></div>
+                <div className="absolute -bottom-4 -left-4 w-6 h-6 bg-purple-500 rounded-full animate-pulse delay-75"></div>
               </div>
             </div>
           </div>
