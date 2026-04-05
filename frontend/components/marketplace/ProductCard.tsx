@@ -25,11 +25,11 @@ export function ProductCard({
   const itemInCart = isInCart(product.id);
 
   return (
-    <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer group">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer group">
       {/* Product Image */}
-      <div className="relative h-48 bg-gray-200 rounded-t-lg overflow-hidden">
+      <div className="relative h-48 bg-gray-200 dark:bg-gray-700 rounded-t-lg overflow-hidden">
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-4xl text-gray-400">📦</span>
+          <span className="text-4xl text-gray-400 dark:text-gray-500">📦</span>
         </div>
         
         {/* Badges */}
@@ -69,7 +69,7 @@ export function ProductCard({
 
         {/* stock number */}
         <div className="absolute bottom-2 left-2">
-          <span className="text-sm text-gray-500 ml-1">
+          <span className="text-sm text-gray-500 dark:text-gray-400 ml-1">
             Stock: {product.stock.toString()}
           </span>
         </div>
@@ -79,31 +79,31 @@ export function ProductCard({
       <div className="p-4">
         {/* Product Name & Rating */}
         <div className="flex justify-between items-start mb-2">
-          <h3 className="font-semibold text-gray-900 text-sm line-clamp-2 flex-1">
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-sm line-clamp-2 flex-1">
             {product.name}
           </h3>
           <div className="flex items-center gap-1 ml-2 shrink-0">
             <span className="text-yellow-400">⭐</span>
-            <span className="text-xs text-gray-600">4.5</span>
+            <span className="text-xs text-gray-600 dark:text-gray-400">4.5</span>
           </div>
         </div>
 
         {/* Description */}
-        <p className="text-gray-600 text-xs mb-3 line-clamp-2">
+        <p className="text-gray-600 dark:text-gray-400 text-xs mb-3 line-clamp-2">
           {product.description}
         </p>
 
         {/* Price & Stock */}
         <div className="flex justify-between items-center mb-3">
           <div>
-            <span className="text-xl font-bold text-gray-900">
+            <span className="text-xl font-bold text-gray-900 dark:text-gray-100">
               {formatPrice(product.price)} CELO
             </span>
           </div>
           {showSeller && (
             <div className="text-right">
-              <p className="text-xs text-gray-500">Seller</p>
-              <p className="text-xs font-medium text-gray-700">
+              <p className="text-xs text-gray-500 dark:text-gray-400">Seller</p>
+              <p className="text-xs font-medium text-gray-700 dark:text-gray-300">
                 {formatAddress(product.seller)}
               </p>
             </div>
@@ -124,7 +124,7 @@ export function ProductCard({
                 e.stopPropagation();
                 addToCart(product.id);
               }}
-              className={`bg-gray-100 text-gray-700 py-2 px-3 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium ${itemInCart ? 'bg-green-100 text-green-700' : ''}`}
+              className={`bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-2 px-3 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium ${itemInCart ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : ''}`}
               disabled={!isInStock}
             >
               {itemInCart ? 'In Cart ✓' : isInStock ? 'Add to Cart' : 'Sold Out'}
@@ -134,8 +134,8 @@ export function ProductCard({
       </div>
 
       {/* Web3 Trust Indicators */}
-      <div className="border-t border-gray-100 px-4 py-2">
-        <div className="flex items-center justify-between text-xs text-gray-500">
+      <div className="border-t border-gray-100 dark:border-gray-700 px-4 py-2">
+        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
           <div className="flex items-center gap-1">
             <span className="text-green-500">🔗</span>
             <span>On-chain</span>

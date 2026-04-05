@@ -59,7 +59,7 @@ export function SearchBar({ searchParams, onSearchChange, placeholder = "Search 
           {/* Search Icon */}
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg
-              className="h-5 w-5 text-gray-400"
+              className="h-5 w-5 text-gray-400 dark:text-gray-500"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -79,7 +79,7 @@ export function SearchBar({ searchParams, onSearchChange, placeholder = "Search 
             value={query}
             onChange={(e) => handleInputChange(e.target.value)}
             placeholder={placeholder}
-            className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg leading-5 bg-white dark:bg-gray-700 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 dark:text-gray-100"
           />
 
           {/* Clear Button */}
@@ -90,7 +90,7 @@ export function SearchBar({ searchParams, onSearchChange, placeholder = "Search 
               className="absolute inset-y-0 right-0 pr-3 flex items-center"
             >
               <svg
-                className="h-5 w-5 text-gray-400 hover:text-gray-600"
+                className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -109,19 +109,19 @@ export function SearchBar({ searchParams, onSearchChange, placeholder = "Search 
 
       {/* Suggestions Dropdown */}
       {showSuggestions && suggestions.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-10">
           <div className="py-2">
-            <div className="px-3 py-2 text-xs text-gray-500 font-medium uppercase tracking-wider">
+            <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">
               Suggestions
             </div>
             {suggestions.map((suggestion, index) => (
               <button
                 key={index}
                 onClick={() => handleSuggestionClick(suggestion)}
-                className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
+                className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors flex items-center gap-2"
               >
                 <svg
-                  className="h-4 w-4 text-gray-400"
+                  className="h-4 w-4 text-gray-400 dark:text-gray-500"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -142,12 +142,12 @@ export function SearchBar({ searchParams, onSearchChange, placeholder = "Search 
 
       {/* Recent Searches (when no query) */}
       {showSuggestions && suggestions.length === 0 && query.length === 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-10">
           <div className="py-2">
-            <div className="px-3 py-2 text-xs text-gray-500 font-medium uppercase tracking-wider">
+            <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">
               Recent Searches
             </div>
-            <div className="px-3 py-2 text-sm text-gray-500">
+            <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
               No recent searches
             </div>
           </div>

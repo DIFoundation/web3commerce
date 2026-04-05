@@ -149,7 +149,7 @@ export default function MarketplacePage() {
               className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
                 !filters.category
                   ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
             >
               All Products
@@ -161,7 +161,7 @@ export default function MarketplacePage() {
                 className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-2 ${
                   filters.category === category.id
                     ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                 }`}
               >
                 <span>{category.icon}</span>
@@ -188,8 +188,8 @@ export default function MarketplacePage() {
             {/* Results Header */}
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Marketplace</h1>
-                <p className="text-gray-600 mt-1">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Marketplace</h1>
+                <p className="text-gray-600 dark:text-gray-400 mt-1">
                   {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'} found
                 </p>
               </div>
@@ -199,15 +199,15 @@ export default function MarketplacePage() {
             {loadingAllProducts ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="mt-4 text-gray-600">Loading marketplace...</p>
+                <p className="mt-4 text-gray-600 dark:text-gray-400">Loading marketplace...</p>
               </div>
             ) : filteredProducts.length === 0 ? (
-              <div className="bg-white rounded-lg shadow p-8 text-center">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
                 <span className="text-6xl mb-4 block">🔍</span>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
                   No products found
                 </h3>
-                <p className="text-gray-600 mb-6">
+                <p className="text-gray-600 dark:text-gray-400 mb-6">
                   Try adjusting your filters or search terms
                 </p>
                 <button
@@ -232,7 +232,7 @@ export default function MarketplacePage() {
             {/* Load More (for infinite scroll) */}
             {filteredProducts.length > 0 && (
               <div className="text-center mt-12">
-                <button className="bg-gray-100 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-200 transition-colors font-medium">
+                <button className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-8 py-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium">
                   Load More Products
                 </button>
               </div>
