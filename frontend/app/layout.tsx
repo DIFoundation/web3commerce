@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { Navbar } from "@/components/shared/Navbar";
-import { ThemeProvider } from "@/contexts/ThemeContext";
+// import { ThemeProvider } from "@/contexts/ThemeContext";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -26,12 +26,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} antialiased mx-14 bg-gray-100 dark:bg-gray-900`}>
-        <ThemeProvider>
+        {/* <ThemeProvider> */}
           <Providers>
             <Navbar />
             {children}
           </Providers>
-        </ThemeProvider>
+        {/* </ThemeProvider> */}
       </body>
     </html>
   );

@@ -120,7 +120,7 @@ export default function MarketplacePage() {
   return (
     <div className="min-h-screen pt-20">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-gray-100 dark:bg-gray-800 shadow-sm border-b dark:border-gray-500 rounded-xl">
         <div className="max-w-[1500px] mx-auto px-4 py-4">
           <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
             {/* Search Bar */}

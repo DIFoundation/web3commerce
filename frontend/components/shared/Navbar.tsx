@@ -7,14 +7,14 @@ import { usePrivy } from '@privy-io/react-auth';
 import { useConnection } from 'wagmi';
 import { ConnectWallet } from '@/components/auth/ConnectWallet';
 import { useCart } from '@/hooks/useCart';
-import { useTheme } from '@/contexts/ThemeContext';
+// import { useTheme } from '@/contexts/ThemeContext';
 
 export function Navbar() {
   const pathname = usePathname();
   const { authenticated } = usePrivy();
   const { isConnected } = useConnection();
   const { cart } = useCart();
-  const { theme, toggleTheme } = useTheme();
+  // const { theme, toggleTheme } = useTheme();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -60,7 +60,7 @@ export function Navbar() {
         <div className="flex items-center gap-4">
           <ConnectWallet />
           {/* Theme Toggle */}
-          <button
+          {/* <button
             onClick={toggleTheme}
             className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
             aria-label="Toggle theme"
@@ -74,7 +74,7 @@ export function Navbar() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
             )}
-          </button>
+          </button> */}
         </div>
       </div>
     </nav>

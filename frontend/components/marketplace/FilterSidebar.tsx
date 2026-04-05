@@ -68,14 +68,14 @@ export function FilterSidebar({ filters, onFiltersChange, isOpen, onToggle }: Fi
       <div className="lg:hidden mb-4">
         <button
           onClick={onToggle}
-          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
         >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z" />
           </svg>
-          <span>Filters</span>
+          <span className="text-gray-900 dark:text-gray-100">Filters</span>
           {activeFiltersCount > 0 && (
-            <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
+            <span className="bg-blue-600 dark:bg-blue-400 text-white text-xs px-2 py-1 rounded-full">
               {activeFiltersCount}
             </span>
           )}
@@ -84,13 +84,13 @@ export function FilterSidebar({ filters, onFiltersChange, isOpen, onToggle }: Fi
 
       {/* Sidebar */}
       <div className={`${isOpen ? 'block' : 'hidden'} lg:block lg:w-64 shrink-0`}>
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-gray-100 dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors duration-200">
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Filters</h3>
             <button
               onClick={handleClearFilters}
-              className="text-sm text-blue-600 hover:text-blue-700"
+              className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
             >
               Clear all
             </button>
@@ -98,24 +98,24 @@ export function FilterSidebar({ filters, onFiltersChange, isOpen, onToggle }: Fi
 
           {/* Categories */}
           <div className="mb-6">
-            <h4 className="text-sm font-medium text-gray-900 mb-3">Categories</h4>
+            <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">Categories</h4>
             <div className="space-y-2">
               {mockCategories.map((category) => (
                 <label
                   key={category.id}
-                  className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded"
+                  className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded"
                 >
                   <input
                     type="checkbox"
                     checked={filters.category === category.id}
                     onChange={() => handleCategoryChange(category.id)}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:focus:ring-blue-400"
                   />
                   <div className="flex items-center gap-2 flex-1">
                     <span className="text-lg">{category.icon}</span>
-                    <span className="text-sm text-gray-700">{category.name}</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">{category.name}</span>
                   </div>
-                  <span className="text-xs text-gray-500">({category.productCount})</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">({category.productCount})</span>
                 </label>
               ))}
             </div>
@@ -123,26 +123,26 @@ export function FilterSidebar({ filters, onFiltersChange, isOpen, onToggle }: Fi
 
           {/* Price Range */}
           <div className="mb-6">
-            <h4 className="text-sm font-medium text-gray-900 mb-3">Price Range (CELO)</h4>
+            <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">Price Range (CELO)</h4>
             <div className="space-y-3">
               <div>
-                <label className="block text-xs text-gray-600 mb-1">Min</label>
+                <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Min</label>
                 <input
                   type="number"
                   placeholder="0"
                   value={priceRange.min}
                   onChange={(e) => handlePriceRangeChange('min', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-sm text-gray-900 dark:text-gray-100"
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-600 mb-1">Max</label>
+                <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Max</label>
                 <input
                   type="number"
                   placeholder="1000"
                   value={priceRange.max}
                   onChange={(e) => handlePriceRangeChange('max', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-sm text-gray-900 dark:text-gray-100"
                 />
               </div>
             </div>
@@ -150,55 +150,55 @@ export function FilterSidebar({ filters, onFiltersChange, isOpen, onToggle }: Fi
 
           {/* Stock Status */}
           <div className="mb-6">
-            <h4 className="text-sm font-medium text-gray-900 mb-3">Availability</h4>
-            <label className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded">
+            <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">Availability</h4>
+            <label className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded">
               <input
                 type="checkbox"
                 checked={filters.inStock === true}
                 onChange={(e) => onFiltersChange({ ...filters, inStock: e.target.checked ? true : undefined })}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:focus:ring-blue-400"
               />
-              <span className="text-sm text-gray-700">In Stock Only</span>
+              <span className="text-sm text-gray-700 dark:text-gray-300">In Stock Only</span>
             </label>
           </div>
 
           {/* Seller Type */}
           <div className="mb-6">
-            <h4 className="text-sm font-medium text-gray-900 mb-3">Seller Type</h4>
+            <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">Seller Type</h4>
             <div className="space-y-2">
-              <label className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded">
+              <label className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded">
                 <input
                   type="radio"
                   name="sellerType"
                   checked={!filters.seller}
                   onChange={() => onFiltersChange({ ...filters, seller: undefined })}
-                  className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                  className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-400"
                 />
-                <span className="text-sm text-gray-700">All Sellers</span>
+                <span className="text-sm text-gray-700 dark:text-gray-300">All Sellers</span>
               </label>
-              <label className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded">
+              <label className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded">
                 <input
                   type="radio"
                   name="sellerType"
                   checked={filters.seller !== undefined}
                   onChange={() => onFiltersChange({ ...filters, seller: '0x0000000000000000000000000000000000000000' })}
-                  className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                  className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-400"
                 />
-                <span className="text-sm text-gray-700">Verified Only</span>
+                <span className="text-sm text-gray-700 dark:text-gray-300">Verified Only</span>
               </label>
             </div>
           </div>
 
           {/* Sort Options */}
           <div className="mb-6">
-            <h4 className="text-sm font-medium text-gray-900 mb-3">Sort By</h4>
+            <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">Sort By</h4>
             <select
               value={`${filters.sortBy || 'createdAt'}-${filters.sortOrder || 'desc'}`}
               onChange={(e) => {
                 const [sortBy, sortOrder] = e.target.value.split('-');
                 handleSortChange(sortBy, sortOrder as 'asc' | 'desc');
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-sm text-gray-900 dark:text-gray-100"
             >
               <option value="createdAt-desc">Newest First</option>
               <option value="createdAt-asc">Oldest First</option>
