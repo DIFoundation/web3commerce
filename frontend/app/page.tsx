@@ -46,9 +46,9 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen pt-20">
+    <div className="min-h-screen pt-20 transition-colors">
       {/* Hero Section */}
-      <section className="bg-linear-to-l from-gray-950 to-gray-900 text-white rounded-4xl">
+      <section className="bg-linear-to-l from-gray-950 to-gray-900 text-white rounded-3xl">
         <div className="max-w-7xl mx-auto px-4 py-20">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
@@ -92,13 +92,13 @@ export default function LandingPage() {
       </section>
 
       {/* Value Proposition */}
-      <section className="py-16 bg-white">
+      <section className="py-16 transition-colors">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
               Why Choose Web3Commerce?
             </h2>
-            <p className="text-gray-600 text-lg">
+            <p className="text-gray-600 dark:text-gray-300 text-lg">
               The most trusted decentralized marketplace
             </p>
           </div>
@@ -108,10 +108,10 @@ export default function LandingPage() {
               <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-3xl">🛡️</span>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                 Smart Contract Protection
               </h3>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-300">
                 Every transaction is secured by audited smart contracts with escrow protection
               </p>
             </div>
@@ -120,10 +120,10 @@ export default function LandingPage() {
               <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-3xl">⚡</span>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                 Instant Transactions
               </h3>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-300">
                 Fast, secure payments on Celo blockchain with low fees
               </p>
             </div>
@@ -132,10 +132,10 @@ export default function LandingPage() {
               <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-3xl">🌍</span>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                 Global Marketplace
               </h3>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-300">
                 Shop from verified sellers worldwide with complete transparency
               </p>
             </div>
@@ -144,13 +144,13 @@ export default function LandingPage() {
       </section>
 
       {/* Featured Products */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 bg-gray-100 dark:bg-gray-700 rounded-2xl transition-colors">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
               Featured Products
             </h2>
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-gray-300">
               Trending items from our marketplace
             </p>
           </div>
@@ -158,15 +158,15 @@ export default function LandingPage() {
           {loadingAllProducts ? (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-4 text-gray-600">Loading featured products...</p>
+              <p className="mt-4 text-gray-600 dark:text-gray-300">Loading featured products...</p>
             </div>
           ) : featuredProducts.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-lg p-12 text-center">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-12 text-center transition-colors">
               <span className="text-6xl mb-4 block">🛍️</span>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                 Coming Soon!
               </h3>
-              <p className="text-gray-600 mb-6">
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
                 Amazing products will appear here once sellers join our marketplace
               </p>
               <Link
@@ -180,9 +180,9 @@ export default function LandingPage() {
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {featuredProducts.map((product) => (
-                  <div key={product.id.toString()} className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow">
+                  <div key={product.id.toString()} className="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-xl transition-all">
                     <div className="relative">
-                      <div className="h-48 bg-gray-200 rounded-t-lg flex items-center justify-center">
+                      <div className="h-48 bg-gray-200 dark:bg-gray-700 rounded-t-lg flex items-center justify-center">
                         <span className="text-4xl">📦</span>
                       </div>
                       <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded text-xs font-semibold">
@@ -195,10 +195,10 @@ export default function LandingPage() {
                       )}
                     </div>
                     <div className="p-4">
-                      <h3 className="font-semibold text-gray-900 mb-2 truncate">
+                      <h3 className="font-semibold text-gray-900 dark:text-white mb-2 truncate">
                         {product.name}
                       </h3>
-                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                      <p className="text-gray-600 dark:text-gray-300 text-sm mb-3 line-clamp-2">
                         {product.description}
                       </p>
                       <div className="flex justify-between items-center">
@@ -231,13 +231,13 @@ export default function LandingPage() {
       </section>
 
       {/* How It Works */}
-      <section className="py-16 bg-white">
+      <section className="py-16 transition-colors">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
               How It Works
             </h2>
-            <p className="text-gray-600 text-lg">
+            <p className="text-gray-600 dark:text-gray-300 text-lg">
               Start shopping in 3 simple steps
             </p>
           </div>
@@ -251,10 +251,10 @@ export default function LandingPage() {
                 <div className="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center mx-auto mb-4 font-bold">
                   {item.step}
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                   {item.title}
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-gray-600 dark:text-gray-300">
                   {item.description}
                 </p>
               </div>
@@ -264,71 +264,71 @@ export default function LandingPage() {
       </section>
 
       {/* Trust Layer */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 bg-gray-100 dark:bg-gray-700 rounded-2xl transition-colors">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
               Built on Trust & Transparency
             </h2>
-            <p className="text-gray-600 text-lg">
+            <p className="text-gray-600 dark:text-gray-300 text-lg">
               Every transaction is secure and transparent
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white rounded-lg p-6 text-center shadow-md">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 text-center shadow-md transition-colors">
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
                 <span className="text-xl">✅</span>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Smart Contract Verified</h3>
-              <p className="text-gray-600 text-sm">Audited contracts ensure security</p>
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Smart Contract Verified</h3>
+              <p className="text-gray-600 dark:text-gray-300 text-sm">Audited contracts ensure security</p>
             </div>
 
-            <div className="bg-white rounded-lg p-6 text-center shadow-md">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 text-center shadow-md transition-colors">
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
                 <span className="text-xl">🔒</span>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Secure Escrow</h3>
-              <p className="text-gray-600 text-sm">Funds protected until delivery</p>
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Secure Escrow</h3>
+              <p className="text-gray-600 dark:text-gray-300 text-sm">Funds protected until delivery</p>
             </div>
 
-            <div className="bg-white rounded-lg p-6 text-center shadow-md">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 text-center shadow-md transition-colors">
               <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
                 <span className="text-xl">🌐</span>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Celo Network</h3>
-              <p className="text-gray-600 text-sm">Fast, low-cost transactions</p>
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Celo Network</h3>
+              <p className="text-gray-600 dark:text-gray-300 text-sm">Fast, low-cost transactions</p>
             </div>
 
-            <div className="bg-white rounded-lg p-6 text-center shadow-md">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 text-center shadow-md transition-colors">
               <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
                 <span className="text-xl">👥</span>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Verified Sellers</h3>
-              <p className="text-gray-600 text-sm">Only trusted merchants</p>
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Verified Sellers</h3>
+              <p className="text-gray-600 dark:text-gray-300 text-sm">Only trusted merchants</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Categories */}
-      <section className="py-16 bg-white">
+      <section className="py-16 transition-colors">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
               Explore Categories
             </h2>
-            <p className="text-gray-600 text-lg">
+            <p className="text-gray-600 dark:text-gray-300 text-lg">
               Find exactly what you&apos;re looking for
             </p>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {categories.map((category) => (
-              <div key={category.name} className="bg-gray-50 rounded-lg p-4 text-center hover:bg-gray-100 transition-colors cursor-pointer">
+              <div key={category.name} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 text-center hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors cursor-pointer">
                 <div className="text-3xl mb-2">{category.icon}</div>
-                <h3 className="font-semibold text-gray-900 text-sm">{category.name}</h3>
-                <p className="text-gray-500 text-xs">{category.count} items</p>
+                <h3 className="font-semibold text-gray-900 dark:text-white text-sm">{category.name}</h3>
+                <p className="text-gray-500 dark:text-gray-400 text-xs">{category.count} items</p>
               </div>
             ))}
           </div>
