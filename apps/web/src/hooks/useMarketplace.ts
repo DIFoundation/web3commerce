@@ -171,6 +171,13 @@ export function useMarketplace() {
       args: [escrowId],
     });
 
+    const useAllSellers = () =>
+        useReadContract({
+            address: contract.address,
+            abi: contract.abi,
+            functionName: "getAllSellers",
+        })
+
   // ── Write functions ────────────────────────────────────────────────────────
 
   /**
@@ -328,6 +335,7 @@ export function useMarketplace() {
       useEscrowContract,
       useOwner,
       useEscrowToOrder,
+      useAllSellers
     },
 
     /** Write functions — async, return tx hash */
