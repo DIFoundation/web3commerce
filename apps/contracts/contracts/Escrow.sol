@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.30;
 
+interface IMarketplace {
+    function onDisputeResolved(uint256 _escrowId, bool releasedToSeller) external;
+}
+
 /**
  * @title Escrow
  * @notice Trustless payment escrow for marketplace transactions
@@ -31,6 +35,7 @@ contract Escrow {
 
     struct EscrowData {
         uint256 id;
+        uint256 orderId;
         address buyer;
         address seller;
         uint256 amount;
@@ -80,6 +85,8 @@ contract Escrow {
         address indexed resolver
     );
     event MarketplaceSet(address indexed marketplace);
+    event ownershipTransfered(address indexed owner);
+    event emergencyWithdrawn(address indexed to, uint256 amount);
 
     // ============ Modifiers ============
     modifier onlyOwner() {
@@ -114,7 +121,8 @@ contract Escrow {
     function createEscrow(
         address _buyer,
         address _seller,
-        uint256 _productId
+        uint256 _productId,
+        uint256 _orderId
     ) external payable onlyMarketplace returns (uint256) {
         if (_buyer == address(0) || _seller == address(0))
             revert Escrow__ZeroAddress();
@@ -125,6 +133,7 @@ contract Escrow {
 
         escrows[escrowId] = EscrowData({
             id: escrowId,
+            orderId: _orderId,
             buyer: _buyer,
             seller: _seller,
             amount: msg.value,
@@ -253,6 +262,8 @@ contract Escrow {
             if (!success) revert Escrow__TransferFailed();
         }
 
+        IMarketplace(marketplace).onDisputeResolved(_escrowId, _releaseToSeller);
+
         emit DisputeResolved(
             _escrowId,
             _releaseToSeller ? EscrowStatus.RELEASED : EscrowStatus.REFUNDED,
@@ -336,6 +347,8 @@ contract Escrow {
     function transferOwnership(address _newOwner) external onlyOwner {
         if (_newOwner == address(0)) revert Escrow__ZeroAddress();
         owner = _newOwner;
+
+        emit ownershipTransfered(_newOwner);
     }
 
     /**
@@ -349,6 +362,8 @@ contract Escrow {
     ) external onlyOwner {
         (bool success, ) = _to.call{value: _amount}("");
         if (!success) revert Escrow__TransferFailed();
+
+        emit emergencyWithdrawn(_to, _amount);
     }
 
     // ============ Receive ============
