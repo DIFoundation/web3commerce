@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.30;
 
+import {FHE, euint32} from "@fhevm/solidity/lib/FHE.sol";
+import {ZamaEthereumConfig} from "@fhevm/solidity/config/ZamaConfig.sol";
+
 interface IMarketplace {
     function onDisputeResolved(uint256 _escrowId, bool releasedToSeller) external;
 }
@@ -10,7 +13,7 @@ interface IMarketplace {
  * @notice Trustless payment escrow for marketplace transactions
  * @dev Handles fund locking, release to seller, refunds to buyer, and dispute resolution
  */
-contract Escrow {
+contract Escrow is ZamaEthereumConfig {
     // ============ Errors ============
     error Escrow__NotAuthorized();
     error Escrow__EscrowNotFound();
@@ -23,6 +26,7 @@ contract Escrow {
     error Escrow__TransferFailed();
     error Escrow__ZeroAddress();
     error Escrow__InvalidAmount();
+    error Marketplace__AlreadySet();
 
     // ============ Types ============
     enum EscrowStatus {
@@ -38,8 +42,10 @@ contract Escrow {
         uint256 orderId;
         address buyer;
         address seller;
-        uint256 amount;
+        uint256 amount;           // used for transfer (plaintext)
+        euint32 eAmount;          // encrypted version
         uint256 productId;
+        // euint32 eProductId;    // OPTIONAL
         EscrowStatus status;
         uint256 createdAt;
         uint256 disputeRaisedAt;
@@ -50,6 +56,7 @@ contract Escrow {
     uint256 public escrowCounter;
     address public owner;
     address public marketplace;
+    address public auctionContract;
     uint256 public constant DISPUTE_WINDOW = 7 days;
 
     mapping(uint256 => EscrowData) public escrows;
@@ -87,6 +94,7 @@ contract Escrow {
     event MarketplaceSet(address indexed marketplace);
     event ownershipTransfered(address indexed owner);
     event emergencyWithdrawn(address indexed to, uint256 amount);
+    event AuctionContractSet(address indexed auction);
 
     // ============ Modifiers ============
     modifier onlyOwner() {
@@ -94,8 +102,9 @@ contract Escrow {
         _;
     }
 
-    modifier onlyMarketplace() {
-        if (msg.sender != marketplace) revert Escrow__NotAuthorized();
+    modifier onlyAuthorized() {
+        if (msg.sender != marketplace && msg.sender != auctionContract)
+            revert Escrow__NotAuthorized();
         _;
     }
 
@@ -123,7 +132,7 @@ contract Escrow {
         address _seller,
         uint256 _productId,
         uint256 _orderId
-    ) external payable onlyMarketplace returns (uint256) {
+    ) external payable onlyAuthorized returns (uint256) {
         if (_buyer == address(0) || _seller == address(0))
             revert Escrow__ZeroAddress();
         if (msg.value == 0) revert Escrow__InvalidAmount();
@@ -131,12 +140,15 @@ contract Escrow {
         escrowCounter++;
         uint256 escrowId = escrowCounter;
 
+        euint32 encryptedAmount = FHE.asEuint32(uint32(msg.value));
+
         escrows[escrowId] = EscrowData({
             id: escrowId,
             orderId: _orderId,
             buyer: _buyer,
             seller: _seller,
             amount: msg.value,
+            eAmount: encryptedAmount,
             productId: _productId,
             status: EscrowStatus.PENDING,
             createdAt: block.timestamp,
@@ -283,6 +295,12 @@ contract Escrow {
         return escrows[_escrowId];
     }
 
+    function getEncryptedAmount(
+        uint256 _escrowId
+    ) external view returns (euint32) {
+        return escrows[_escrowId].eAmount;
+    }
+
     /**
      * @notice Get all escrows for a buyer
      * @param _buyer Buyer address
@@ -338,6 +356,12 @@ contract Escrow {
         if (_marketplace == address(0)) revert Escrow__ZeroAddress();
         marketplace = _marketplace;
         emit MarketplaceSet(_marketplace);
+    }
+
+    function setAuctionContract(address _auction) external onlyOwner {
+        if (_auction == address(0)) revert Escrow__ZeroAddress();
+        auctionContract = _auction;
+        emit AuctionContractSet(_auction);
     }
 
     /**
