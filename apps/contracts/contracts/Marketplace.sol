@@ -72,6 +72,7 @@ contract Marketplace {
     address public owner;
     Escrow public escrowContract;
 
+    address[] public sellerAddresses;
     mapping(address => Seller) public sellers;
     mapping(uint256 => Product) public products;
     mapping(uint256 => Order) public orders;
@@ -157,6 +158,8 @@ contract Marketplace {
         string calldata _description
     ) external {
         if (sellers[msg.sender].isActive) revert Marketplace__AlreadySeller();
+
+        sellerAddresses.push(msg.sender);
 
         sellers[msg.sender] = Seller({
             sellerAddress: msg.sender,
@@ -417,6 +420,10 @@ contract Marketplace {
     }
 
     // ============ View Functions ============
+
+    function getAllSellers() external view returns (address[] memory) {
+        return sellerAddresses;
+    }
 
     /**
      * @notice Get all products by a seller

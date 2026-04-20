@@ -19,7 +19,7 @@ const config: HardhatUserConfig = {
     celo: {
       accounts: [PRIVATE_KEY],
       chainId: 42220,
-      url: "https://celo-mainnet.gateway.tatum.io"
+      url: "https://rpc.celocolombia.org"
     },
     celo_sepolia: {
       accounts: [PRIVATE_KEY],
