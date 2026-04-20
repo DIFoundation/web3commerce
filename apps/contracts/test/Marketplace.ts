@@ -488,7 +488,6 @@ describe("Marketplace", function () {
       });
       
       const order = await marketplace.read.orders([1n]) as any;
-      console.log('ooooooooooooooooooooooooo', order);
       expect(order.status).to.equal(3n); // FULFILLED = 3
     });
 

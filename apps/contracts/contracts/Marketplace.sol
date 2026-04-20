@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.30;
 
-import {FHE, euint32} from "@fhevm/solidity/lib/FHE.sol";
-import {ZamaEthereumConfig} from "@fhevm/solidity/config/ZamaConfig.sol";
 import {Escrow} from "./Escrow.sol";
 
 /**
@@ -10,7 +8,7 @@ import {Escrow} from "./Escrow.sol";
  * @notice Decentralized multi-vendor marketplace for listing and purchasing products
  * @dev Handles seller registration, product management, and order creation
  */
-contract Marketplace is ZamaEthereumConfig {
+contract Marketplace {
     // ============ Errors ============
     error Marketplace__NotSeller();
     error Marketplace__AlreadySeller();
@@ -49,7 +47,6 @@ contract Marketplace is ZamaEthereumConfig {
         string name;
         string description;
         uint256 price;     // used for payment
-        euint32 ePrice;    // encrypted price
         uint256 stock;
         string ipfsHash;
         bool isActive;
@@ -193,15 +190,12 @@ contract Marketplace is ZamaEthereumConfig {
         productCounter++;
         uint256 productId = productCounter;
 
-        euint32 encryptedPrice = FHE.asEuint32(uint32(_price));
-
         products[productId] = Product({
             id: productId,
             seller: msg.sender,
             name: _name,
             description: _description,
             price: _price,
-            ePrice: encryptedPrice,
             stock: _stock,
             ipfsHash: _ipfsHash,
             isActive: true,
@@ -235,7 +229,6 @@ contract Marketplace is ZamaEthereumConfig {
         if (_price == 0) revert Marketplace__InvalidPrice();
 
         product.price = _price;
-        product.ePrice = FHE.asEuint32(uint32(_price));
         product.stock = _stock;
         product.isActive = _isActive;
 
@@ -483,12 +476,6 @@ contract Marketplace is ZamaEthereumConfig {
      */
     function getOrderCount() external view returns (uint256) {
         return orderCounter;
-    }
-
-    function getEncryptedPrice(
-        uint256 _productId
-    ) external view returns (euint32) {
-        return products[_productId].ePrice;
     }
 
     /**

@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.30;
 
-import {FHE, euint32} from "@fhevm/solidity/lib/FHE.sol";
-import {ZamaEthereumConfig} from "@fhevm/solidity/config/ZamaConfig.sol";
-
 interface IMarketplace {
     function onDisputeResolved(uint256 _escrowId, bool releasedToSeller) external;
 }
@@ -13,7 +10,7 @@ interface IMarketplace {
  * @notice Trustless payment escrow for marketplace transactions
  * @dev Handles fund locking, release to seller, refunds to buyer, and dispute resolution
  */
-contract Escrow is ZamaEthereumConfig {
+contract Escrow {
     // ============ Errors ============
     error Escrow__NotAuthorized();
     error Escrow__EscrowNotFound();
@@ -43,9 +40,7 @@ contract Escrow is ZamaEthereumConfig {
         address buyer;
         address seller;
         uint256 amount;           // used for transfer (plaintext)
-        euint32 eAmount;          // encrypted version
         uint256 productId;
-        // euint32 eProductId;    // OPTIONAL
         EscrowStatus status;
         uint256 createdAt;
         uint256 disputeRaisedAt;
@@ -140,7 +135,6 @@ contract Escrow is ZamaEthereumConfig {
         escrowCounter++;
         uint256 escrowId = escrowCounter;
 
-        euint32 encryptedAmount = FHE.asEuint32(uint32(msg.value));
 
         escrows[escrowId] = EscrowData({
             id: escrowId,
@@ -148,7 +142,6 @@ contract Escrow is ZamaEthereumConfig {
             buyer: _buyer,
             seller: _seller,
             amount: msg.value,
-            eAmount: encryptedAmount,
             productId: _productId,
             status: EscrowStatus.PENDING,
             createdAt: block.timestamp,
@@ -293,12 +286,6 @@ contract Escrow is ZamaEthereumConfig {
         uint256 _escrowId
     ) external view returns (EscrowData memory) {
         return escrows[_escrowId];
-    }
-
-    function getEncryptedAmount(
-        uint256 _escrowId
-    ) external view returns (euint32) {
-        return escrows[_escrowId].eAmount;
     }
 
     /**
