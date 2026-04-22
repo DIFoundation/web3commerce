@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.30;
 
+interface IMarketplace {
+    function onDisputeResolved(uint256 _escrowId, bool releasedToSeller) external;
+}
+
 /**
  * @title Escrow
  * @notice Trustless payment escrow for marketplace transactions
@@ -19,6 +23,7 @@ contract Escrow {
     error Escrow__TransferFailed();
     error Escrow__ZeroAddress();
     error Escrow__InvalidAmount();
+    error Marketplace__AlreadySet();
 
     // ============ Types ============
     enum EscrowStatus {
@@ -31,9 +36,10 @@ contract Escrow {
 
     struct EscrowData {
         uint256 id;
+        uint256 orderId;
         address buyer;
         address seller;
-        uint256 amount;
+        uint256 amount;           // used for transfer (plaintext)
         uint256 productId;
         EscrowStatus status;
         uint256 createdAt;
@@ -45,6 +51,7 @@ contract Escrow {
     uint256 public escrowCounter;
     address public owner;
     address public marketplace;
+    address public auctionContract;
     uint256 public constant DISPUTE_WINDOW = 7 days;
 
     mapping(uint256 => EscrowData) public escrows;
@@ -80,6 +87,9 @@ contract Escrow {
         address indexed resolver
     );
     event MarketplaceSet(address indexed marketplace);
+    event ownershipTransfered(address indexed owner);
+    event emergencyWithdrawn(address indexed to, uint256 amount);
+    event AuctionContractSet(address indexed auction);
 
     // ============ Modifiers ============
     modifier onlyOwner() {
@@ -87,8 +97,9 @@ contract Escrow {
         _;
     }
 
-    modifier onlyMarketplace() {
-        if (msg.sender != marketplace) revert Escrow__NotAuthorized();
+    modifier onlyAuthorized() {
+        if (msg.sender != marketplace && msg.sender != auctionContract)
+            revert Escrow__NotAuthorized();
         _;
     }
 
@@ -114,8 +125,9 @@ contract Escrow {
     function createEscrow(
         address _buyer,
         address _seller,
-        uint256 _productId
-    ) external payable onlyMarketplace returns (uint256) {
+        uint256 _productId,
+        uint256 _orderId
+    ) external payable onlyAuthorized returns (uint256) {
         if (_buyer == address(0) || _seller == address(0))
             revert Escrow__ZeroAddress();
         if (msg.value == 0) revert Escrow__InvalidAmount();
@@ -123,8 +135,10 @@ contract Escrow {
         escrowCounter++;
         uint256 escrowId = escrowCounter;
 
+
         escrows[escrowId] = EscrowData({
             id: escrowId,
+            orderId: _orderId,
             buyer: _buyer,
             seller: _seller,
             amount: msg.value,
@@ -253,6 +267,8 @@ contract Escrow {
             if (!success) revert Escrow__TransferFailed();
         }
 
+        IMarketplace(marketplace).onDisputeResolved(_escrowId, _releaseToSeller);
+
         emit DisputeResolved(
             _escrowId,
             _releaseToSeller ? EscrowStatus.RELEASED : EscrowStatus.REFUNDED,
@@ -329,6 +345,12 @@ contract Escrow {
         emit MarketplaceSet(_marketplace);
     }
 
+    function setAuctionContract(address _auction) external onlyOwner {
+        if (_auction == address(0)) revert Escrow__ZeroAddress();
+        auctionContract = _auction;
+        emit AuctionContractSet(_auction);
+    }
+
     /**
      * @notice Transfer ownership
      * @param _newOwner New owner address
@@ -336,6 +358,8 @@ contract Escrow {
     function transferOwnership(address _newOwner) external onlyOwner {
         if (_newOwner == address(0)) revert Escrow__ZeroAddress();
         owner = _newOwner;
+
+        emit ownershipTransfered(_newOwner);
     }
 
     /**
@@ -349,6 +373,8 @@ contract Escrow {
     ) external onlyOwner {
         (bool success, ) = _to.call{value: _amount}("");
         if (!success) revert Escrow__TransferFailed();
+
+        emit emergencyWithdrawn(_to, _amount);
     }
 
     // ============ Receive ============

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.30;
 
+import {FHE, euint32} from "@fhevm/solidity/lib/FHE.sol";
+import {ZamaEthereumConfig} from "@fhevm/solidity/config/ZamaConfig.sol";
 import {Escrow} from "./Escrow.sol";
 
 /**
@@ -8,16 +10,18 @@ import {Escrow} from "./Escrow.sol";
  * @notice Decentralized multi-vendor marketplace for listing and purchasing products
  * @dev Handles seller registration, product management, and order creation
  */
-contract Marketplace {
+contract Marketplace is ZamaEthereumConfig {
     // ============ Errors ============
     error Marketplace__NotSeller();
     error Marketplace__AlreadySeller();
     error Marketplace__InvalidPrice();
+    error Marketplace__InsufficientStock();
     error Marketplace__ProductNotFound();
     error Marketplace__NotProductOwner();
     error Marketplace__ProductNotActive();
     error Marketplace__OrderNotFound();
     error Marketplace__Unauthorized();
+    error Marketplace__InvalidState();
     error Marketplace__InvalidIPFSHash();
     error Marketplace__EscrowNotSet();
 
@@ -44,7 +48,8 @@ contract Marketplace {
         address seller;
         string name;
         string description;
-        uint256 price;
+        uint256 price;     // used for payment
+        euint32 ePrice;    // encrypted price
         uint256 stock;
         string ipfsHash;
         bool isActive;
@@ -76,6 +81,7 @@ contract Marketplace {
     mapping(address => uint256[]) public sellerProducts;
     mapping(address => uint256[]) public buyerOrders;
     mapping(address => uint256[]) public sellerOrders;
+    mapping(uint256 => uint256) public escrowToOrder;
 
     // ============ Events ============
     event SellerRegistered(
@@ -131,6 +137,11 @@ contract Marketplace {
         _;
     }
 
+    modifier onlyEscrow() {
+        if (msg.sender != address(escrowContract)) revert Marketplace__Unauthorized();
+        _;
+    }
+
     // ============ Constructor ============
     constructor(address payable _escrowContract) {
         owner = msg.sender;
@@ -182,12 +193,15 @@ contract Marketplace {
         productCounter++;
         uint256 productId = productCounter;
 
+        euint32 encryptedPrice = FHE.asEuint32(uint32(_price));
+
         products[productId] = Product({
             id: productId,
             seller: msg.sender,
             name: _name,
             description: _description,
             price: _price,
+            ePrice: encryptedPrice,
             stock: _stock,
             ipfsHash: _ipfsHash,
             isActive: true,
@@ -221,6 +235,7 @@ contract Marketplace {
         if (_price == 0) revert Marketplace__InvalidPrice();
 
         product.price = _price;
+        product.ePrice = FHE.asEuint32(uint32(_price));
         product.stock = _stock;
         product.isActive = _isActive;
 
@@ -263,23 +278,24 @@ contract Marketplace {
         Product storage product = products[_productId];
 
         if (!product.isActive) revert Marketplace__ProductNotActive();
-        if (product.stock < _quantity) revert Marketplace__InvalidPrice();
+        if (product.stock < _quantity) revert Marketplace__InsufficientStock();
         if (product.seller == msg.sender)
             revert Marketplace__Unauthorized(); // Can't buy own product
 
         uint256 totalAmount = product.price * _quantity;
         if (msg.value != totalAmount) revert Marketplace__InvalidPrice();
 
+        // Create order
+        orderCounter++;
+        orderId = orderCounter;
+
         // Create escrow
         escrowId = escrowContract.createEscrow{value: msg.value}(
             msg.sender,
             product.seller,
-            _productId
+            _productId,
+            orderId
         );
-
-        // Create order
-        orderCounter++;
-        orderId = orderCounter;
 
         orders[orderId] = Order({
             id: orderId,
@@ -297,6 +313,9 @@ contract Marketplace {
         // Update stock
         product.stock -= _quantity;
 
+        // Track escrow to order mapping
+        escrowToOrder[escrowId] = orderId;
+        
         // Track orders
         buyerOrders[msg.sender].push(orderId);
         sellerOrders[product.seller].push(orderId);
@@ -315,6 +334,22 @@ contract Marketplace {
     }
 
     /**
+     * @notice Mark order as fulfilled by seller
+     * @param _orderId Order ID to mark as fulfilled
+     */
+    function fulfillOrder(uint256 _orderId) external orderExists(_orderId) {
+        Order storage order = orders[_orderId];
+
+        if (order.seller != msg.sender) revert Marketplace__Unauthorized();
+        if (order.status != OrderStatus.PAID) revert Marketplace__InvalidState();
+
+        OrderStatus oldStatus = order.status;
+        order.status = OrderStatus.FULFILLED;
+
+        emit OrderStatusChanged(_orderId, oldStatus, OrderStatus.FULFILLED);
+    }
+
+    /**
      * @notice Confirm order fulfillment by buyer
      * @param _orderId Order ID to confirm
      */
@@ -324,7 +359,7 @@ contract Marketplace {
         Order storage order = orders[_orderId];
 
         if (order.buyer != msg.sender) revert Marketplace__Unauthorized();
-        if (order.status != OrderStatus.PAID) revert Marketplace__Unauthorized();
+        if (order.status != OrderStatus.FULFILLED) revert Marketplace__Unauthorized();
 
         // Release escrow funds to seller
         escrowContract.releasePayment(order.escrowId);
@@ -357,6 +392,35 @@ contract Marketplace {
         order.status = OrderStatus.CANCELLED;
 
         emit OrderStatusChanged(_orderId, oldStatus, OrderStatus.CANCELLED);
+    }
+
+    /**
+     * @notice Raise dispute for an order
+     * @param _orderId Order ID to raise dispute for
+     */
+    function raiseDispute(uint256 _orderId) external orderExists(_orderId) {
+        Order storage order = orders[_orderId];
+        if (msg.sender != order.buyer && msg.sender != order.seller) 
+            revert Marketplace__Unauthorized();
+        
+        escrowContract.raiseDispute(order.escrowId);        
+    }
+
+    function onDisputeResolved(uint256 _escrowId, bool releasedToSeller) external onlyEscrow {
+        uint256 orderId = escrowToOrder[_escrowId];
+        Order storage order = orders[orderId];
+        
+        OrderStatus oldStatus = order.status;
+        if (releasedToSeller) {
+            order.status = OrderStatus.COMPLETED;
+        } else {
+            order.status = OrderStatus.REFUNDED;
+            // Restore stock since refunded
+            Product storage product = products[order.productId];
+            product.stock += order.quantity;
+        }
+        
+        emit OrderStatusChanged(orderId, oldStatus, order.status);
     }
 
     // ============ View Functions ============
@@ -419,6 +483,12 @@ contract Marketplace {
      */
     function getOrderCount() external view returns (uint256) {
         return orderCounter;
+    }
+
+    function getEncryptedPrice(
+        uint256 _productId
+    ) external view returns (euint32) {
+        return products[_productId].ePrice;
     }
 
     /**

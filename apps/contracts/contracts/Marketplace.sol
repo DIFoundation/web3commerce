@@ -13,11 +13,13 @@ contract Marketplace {
     error Marketplace__NotSeller();
     error Marketplace__AlreadySeller();
     error Marketplace__InvalidPrice();
+    error Marketplace__InsufficientStock();
     error Marketplace__ProductNotFound();
     error Marketplace__NotProductOwner();
     error Marketplace__ProductNotActive();
     error Marketplace__OrderNotFound();
     error Marketplace__Unauthorized();
+    error Marketplace__InvalidState();
     error Marketplace__InvalidIPFSHash();
     error Marketplace__EscrowNotSet();
 
@@ -44,7 +46,7 @@ contract Marketplace {
         address seller;
         string name;
         string description;
-        uint256 price;
+        uint256 price;     // used for payment
         uint256 stock;
         string ipfsHash;
         bool isActive;
@@ -70,12 +72,14 @@ contract Marketplace {
     address public owner;
     Escrow public escrowContract;
 
+    address[] public sellerAddresses;
     mapping(address => Seller) public sellers;
     mapping(uint256 => Product) public products;
     mapping(uint256 => Order) public orders;
     mapping(address => uint256[]) public sellerProducts;
     mapping(address => uint256[]) public buyerOrders;
     mapping(address => uint256[]) public sellerOrders;
+    mapping(uint256 => uint256) public escrowToOrder;
 
     // ============ Events ============
     event SellerRegistered(
@@ -131,6 +135,11 @@ contract Marketplace {
         _;
     }
 
+    modifier onlyEscrow() {
+        if (msg.sender != address(escrowContract)) revert Marketplace__Unauthorized();
+        _;
+    }
+
     // ============ Constructor ============
     constructor(address payable _escrowContract) {
         owner = msg.sender;
@@ -149,6 +158,8 @@ contract Marketplace {
         string calldata _description
     ) external {
         if (sellers[msg.sender].isActive) revert Marketplace__AlreadySeller();
+
+        sellerAddresses.push(msg.sender);
 
         sellers[msg.sender] = Seller({
             sellerAddress: msg.sender,
@@ -263,23 +274,24 @@ contract Marketplace {
         Product storage product = products[_productId];
 
         if (!product.isActive) revert Marketplace__ProductNotActive();
-        if (product.stock < _quantity) revert Marketplace__InvalidPrice();
+        if (product.stock < _quantity) revert Marketplace__InsufficientStock();
         if (product.seller == msg.sender)
             revert Marketplace__Unauthorized(); // Can't buy own product
 
         uint256 totalAmount = product.price * _quantity;
         if (msg.value != totalAmount) revert Marketplace__InvalidPrice();
 
+        // Create order
+        orderCounter++;
+        orderId = orderCounter;
+
         // Create escrow
         escrowId = escrowContract.createEscrow{value: msg.value}(
             msg.sender,
             product.seller,
-            _productId
+            _productId,
+            orderId
         );
-
-        // Create order
-        orderCounter++;
-        orderId = orderCounter;
 
         orders[orderId] = Order({
             id: orderId,
@@ -297,6 +309,9 @@ contract Marketplace {
         // Update stock
         product.stock -= _quantity;
 
+        // Track escrow to order mapping
+        escrowToOrder[escrowId] = orderId;
+        
         // Track orders
         buyerOrders[msg.sender].push(orderId);
         sellerOrders[product.seller].push(orderId);
@@ -315,6 +330,22 @@ contract Marketplace {
     }
 
     /**
+     * @notice Mark order as fulfilled by seller
+     * @param _orderId Order ID to mark as fulfilled
+     */
+    function fulfillOrder(uint256 _orderId) external orderExists(_orderId) {
+        Order storage order = orders[_orderId];
+
+        if (order.seller != msg.sender) revert Marketplace__Unauthorized();
+        if (order.status != OrderStatus.PAID) revert Marketplace__InvalidState();
+
+        OrderStatus oldStatus = order.status;
+        order.status = OrderStatus.FULFILLED;
+
+        emit OrderStatusChanged(_orderId, oldStatus, OrderStatus.FULFILLED);
+    }
+
+    /**
      * @notice Confirm order fulfillment by buyer
      * @param _orderId Order ID to confirm
      */
@@ -324,7 +355,7 @@ contract Marketplace {
         Order storage order = orders[_orderId];
 
         if (order.buyer != msg.sender) revert Marketplace__Unauthorized();
-        if (order.status != OrderStatus.PAID) revert Marketplace__Unauthorized();
+        if (order.status != OrderStatus.FULFILLED) revert Marketplace__Unauthorized();
 
         // Release escrow funds to seller
         escrowContract.releasePayment(order.escrowId);
@@ -359,7 +390,40 @@ contract Marketplace {
         emit OrderStatusChanged(_orderId, oldStatus, OrderStatus.CANCELLED);
     }
 
+    /**
+     * @notice Raise dispute for an order
+     * @param _orderId Order ID to raise dispute for
+     */
+    function raiseDispute(uint256 _orderId) external orderExists(_orderId) {
+        Order storage order = orders[_orderId];
+        if (msg.sender != order.buyer && msg.sender != order.seller) 
+            revert Marketplace__Unauthorized();
+        
+        escrowContract.raiseDispute(order.escrowId);        
+    }
+
+    function onDisputeResolved(uint256 _escrowId, bool releasedToSeller) external onlyEscrow {
+        uint256 orderId = escrowToOrder[_escrowId];
+        Order storage order = orders[orderId];
+        
+        OrderStatus oldStatus = order.status;
+        if (releasedToSeller) {
+            order.status = OrderStatus.COMPLETED;
+        } else {
+            order.status = OrderStatus.REFUNDED;
+            // Restore stock since refunded
+            Product storage product = products[order.productId];
+            product.stock += order.quantity;
+        }
+        
+        emit OrderStatusChanged(orderId, oldStatus, order.status);
+    }
+
     // ============ View Functions ============
+
+    function getAllSellers() external view returns (address[] memory) {
+        return sellerAddresses;
+    }
 
     /**
      * @notice Get all products by a seller
