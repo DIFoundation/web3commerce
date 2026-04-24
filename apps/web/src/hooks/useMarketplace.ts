@@ -143,7 +143,7 @@ export function useMarketplace() {
       abi: contract.abi,
       functionName: "sellers",
       args: [seller],
-      query: { enabled: Boolean(seller) },
+      // query: { enabled: Boolean(seller) },
     });
 
   /** Escrow contract address */
