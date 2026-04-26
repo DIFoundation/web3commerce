@@ -1,15 +1,20 @@
 'use client';
 
-// import { useMarketplace } from '@/hooks/useMarketplace';
+import { useMarketplace } from '@/hooks/useMarketplace';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowUpRight } from 'lucide-react';
 
 export default function LandingPage() {
-  // const { loadingAllProducts, allProducts } = useMarketplace();
+  const { reads: { useProductCount, useProducts } } = useMarketplace();
+  
+  const productCount = useProductCount();
+  
+  // Only fetch first 6 products for featured section
+  const featuredProductIds = productCount
+    ? Array.from({ length: Math.min(Number(productCount), 6) }, (_, i) => BigInt(i + 1))
+    : [];
 
-  // Sample featured products (would come from contracts)
-  // const featuredProducts = allProducts.slice(0, 6);
+  const { data: featuredProducts, isLoading } = useProducts(featuredProductIds);
 
   const categories = [
     { name: 'Electronics', icon: '📱', count: 24 },
@@ -46,9 +51,9 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen pt-20 transition-colors">
+    <div className="min-h-screen transition-colors">
       {/* Hero Section */}
-      <section className="bg-linear-to-l from-gray-950 to-gray-900 text-white rounded-3xl">
+      <section className="bg-gradient-to-l from-gray-950 to-gray-900 text-white rounded-3xl">
         <div className="max-w-7xl mx-auto px-4 py-20">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
@@ -68,7 +73,13 @@ export default function LandingPage() {
                   href="/marketplace"
                   className="bg-white text-black px-8 py-4 rounded-lg font-semibold hover:bg-gray-200 transition-all transform hover:scale-105 inline-flex items-center"
                 >
-                  Explore Marketplace <ArrowUpRight className="ml-2" />
+                  Explore Marketplace 
+                  {/* <ArrowUpRight className="ml-2" /> */}
+                  {/* ArrowUpRight SVG */}
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-arrow-up-right ml-2" aria-hidden="true">
+                    <path d="M7 17 17 7"></path>
+                    <path d="M7 7h10v10"></path>
+                  </svg>
                 </Link>
               </div>
             </div>
@@ -155,12 +166,12 @@ export default function LandingPage() {
             </p>
           </div>
 
-          {/* {loadingAllProducts ? (
+          {isLoading ? (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
               <p className="mt-4 text-gray-600 dark:text-gray-300">Loading featured products...</p>
             </div>
-          ) : featuredProducts.length === 0 ? (
+          ) : !featuredProducts || featuredProducts.length === 0 ? (
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-12 text-center transition-colors">
               <span className="text-6xl mb-4 block">🛍️</span>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
@@ -226,7 +237,7 @@ export default function LandingPage() {
                 </a>
               </div>
             </>
-          )} */}
+          )}
         </div>
       </section>
 
@@ -417,58 +428,5 @@ export default function LandingPage() {
         </div>
       </footer>
     </div>
-  );
-}
-
-import { Button } from "@/components/ui/button";
-import { UserBalance } from "@/components/user-balance";
-import { Zap } from "lucide-react";
-
-const Home = () => {
-  return (
-<main className="flex-1">
-  {/* Hero Section */}
-  <section className="relative py-20 lg:py-32">
-    <div className="container px-4 mx-auto max-w-7xl">
-      <div className="text-center max-w-4xl mx-auto">
-        {/* Badge */}
-        <div
-          className="inline-flex items-center gap-2 px-3 py-1 mb-8 text-sm font-medium bg-primary/10 text-primary rounded-full border border-primary/20"
-        >
-          <Zap className="h-4 w-4" />
-          Built on Celo
-        </div>
-
-        {/* Main Heading */}
-        <h1
-          className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6"
-        >
-          Welcome to{" "}
-          <span className="text-primary">my-celo-app</span>
-        </h1>
-
-        {/* Subtitle */}
-        <p
-          className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed"
-        >
-          Start building your decentralized application on Celo. Fast and secure blockchain for everyone.
-        </p>
-
-        {/* User Balance Display */}
-        <UserBalance />
-
-        {/* CTA Buttons */}
-        <div
-          className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16"
-        >
-          <Button size="lg" className="px-8 py-3 text-base font-medium">
-            Get Started
-          </Button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-</main>
   );
 }
