@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import QueryProvider from "@/providers/query-provider";
 
 import { Navbar } from '@/components/navbar';
 import { WalletProvider } from "@/components/wallet-provider"
@@ -20,6 +21,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
+<QueryProvider>
         {/* Navbar is included on all pages */}
         <div className="relative flex min-h-screen flex-col">
           <WalletProvider>
@@ -29,6 +31,7 @@ export default function RootLayout({
             </main>
           </WalletProvider>
         </div>
+</QueryProvider>
       </body>
     </html>
   );
