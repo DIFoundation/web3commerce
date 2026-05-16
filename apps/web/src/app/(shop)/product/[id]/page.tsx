@@ -21,8 +21,6 @@ export default function ProductPage() {
   const { data: product, isLoading: productLoading } = useProduct(productId);
   const { data: seller } = useSeller(product?.[1] || '0x' as Address);
 
-  console.log('===============', product?.[0])
-
   const formatPrice = (price: bigint) => {
     return (Number(price) / 1e18).toFixed(4);
   };
