@@ -21,7 +21,7 @@ export default function ProductPage() {
   const { data: product, isLoading: productLoading } = useProduct(productId);
   const { data: seller } = useSeller(product?.[1] || '0x' as Address);
 
-  console.log('sellers: ', seller)
+  console.log('===============', product?.[0])
 
   const formatPrice = (price: bigint) => {
     return (Number(price) / 1e18).toFixed(4);
@@ -289,7 +289,7 @@ export default function ProductPage() {
                   </div>
                 </div>
                 <button
-                  onClick={() => router.push(`/seller/${product.seller}`)}
+                  onClick={() => router.push(`/seller/${product[1]}`)}
                   className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
                 >
                   View Store
@@ -331,18 +331,18 @@ export default function ProductPage() {
                     <div className="space-y-3">
                       <div className="flex justify-between py-2 border-b dark:border-gray-700">
                         <span className="text-gray-600 dark:text-gray-400">Product ID</span>
-                        <span className="font-medium text-gray-900 dark:text-gray-100">#{product.id}</span>
+                        <span className="font-medium text-gray-900 dark:text-gray-100">#{(Number(product?.[0]) || 0).toString()}</span>
                       </div>
                       <div className="flex justify-between py-2 border-b dark:border-gray-700">
                         <span className="text-gray-600 dark:text-gray-400">Created</span>
                         <span className="font-medium text-gray-900 dark:text-gray-100">
-                          {new Date(Number(product.createdAt) * 1000).toLocaleDateString()}
+                          {new Date(Number(product[8]) * 1000).toLocaleDateString()}
                         </span>
                       </div>
                       <div className="flex justify-between py-2 border-b dark:border-gray-700">
                         <span className="text-gray-600 dark:text-gray-400">IPFS Hash</span>
                         <span className="font-medium text-gray-900 dark:text-gray-100 text-sm">
-                          {product.ipfsHash.slice(0, 16)}...
+                          {product[6].slice(0, 16)}...
                         </span>
                       </div>
                       <div className="flex justify-between py-2">
