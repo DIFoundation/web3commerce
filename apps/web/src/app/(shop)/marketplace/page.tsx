@@ -16,8 +16,8 @@ export default function MarketplacePage() {
 
   const productCount = useProductCount();
 
-  const featuredProductIds = productCount
-    ? Array.from({ length: Number(productCount) }, (_, i) => BigInt(i + 1))
+  const featuredProductIds = productCount.data
+    ? Array.from({ length: Number(productCount.data) }, (_, i) => BigInt(i + 1))
     : [];
 
   const { data: featuredProducts, isLoading } = useProducts(featuredProductIds);
