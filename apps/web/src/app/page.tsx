@@ -53,7 +53,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen transition-colors">
       {/* Hero Section */}
-      <section className="bg-gradient-to-l from-gray-950 to-gray-900 text-white rounded-3xl">
+      <section className="bg-gradient-to-l from-gray-950 to-gray-900 text-white rounded-3xl mx-16">
         <div className="max-w-7xl mx-auto px-4 py-20">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
@@ -85,15 +85,13 @@ export default function LandingPage() {
             </div>
             <div className="flex justify-center lg:justify-end">
               <div className="relative">
-                {/* <div className="w-full max-w-md h-96 bg-gray-900 rounded-lg flex items-center justify-center"> */}
                   <Image
-                    src="/banner.png"
+                    src="/basket.png"
                     alt="Product"
                     width={400}
                     height={400}
-                    className="object-cover"
+                    className="object-cover rounded-full shadow-lg"
                   />
-                {/* </div> */}
                 <div className="absolute -top-4 -right-4 w-8 h-8 bg-blue-500 rounded-full animate-pulse"></div>
                 <div className="absolute -bottom-4 -left-4 w-6 h-6 bg-purple-500 rounded-full animate-pulse delay-75"></div>
               </div>
@@ -189,7 +187,7 @@ export default function LandingPage() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {featuredProducts.map((product) => (
                   <div key={product.id.toString()} className="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-xl transition-all">
                     <div className="relative">
