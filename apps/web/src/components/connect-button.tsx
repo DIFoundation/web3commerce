@@ -17,5 +17,15 @@ export function ConnectButton() {
     return null;
   }
 
-  return <RainbowKitConnectButton />;
+  return(
+    <RainbowKitConnectButton.Custom>
+      {({ openConnectModal }) => {
+        return (
+          <button onClick={openConnectModal}>
+            Connect Wallet
+          </button>
+        );
+      }}
+    </RainbowKitConnectButton.Custom>
+  );
 }

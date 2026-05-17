@@ -10,8 +10,8 @@ export default function LandingPage() {
   const productCount = useProductCount();
   
   // Only fetch first 6 products for featured section
-  const featuredProductIds = productCount
-    ? Array.from({ length: Math.min(Number(productCount), 6) }, (_, i) => BigInt(i + 1))
+  const featuredProductIds = productCount.data
+    ? Array.from({ length: Math.min(Number(productCount.data), 6) }, (_, i) => BigInt(i + 1))
     : [];
 
   const { data: featuredProducts, isLoading } = useProducts(featuredProductIds);
