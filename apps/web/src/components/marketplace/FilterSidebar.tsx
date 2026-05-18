@@ -1,13 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { ProductFilters, Category } from '@/types';
+import { ProductFilters, Category, SearchParams } from '@/types';
 
 interface FilterSidebarProps {
   filters: ProductFilters;
   onFiltersChange: (filters: ProductFilters) => void;
   isOpen: boolean;
   onToggle: () => void;
+  filteredProductsCount: number;
+  searchParams: SearchParams;
+  onSearchChange: (params: SearchParams) => void;
 }
 
 // Mock categories - would come from API
@@ -20,7 +23,74 @@ const mockCategories: Category[] = [
   { id: 'digital-art', name: 'Digital Art', description: 'Artworks', icon: '🖼️', productCount: 92, isActive: true },
 ];
 
-export function FilterSidebar({ filters, onFiltersChange, isOpen, onToggle }: FilterSidebarProps) {
+// Category pills for quick filtering
+const categories = [
+  { id: 'electronics', name: 'Electronics', icon: '📱' },
+  { id: 'fashion', name: 'Fashion', icon: '👕' },
+  { id: 'nfts', name: 'NFTs', icon: '🎨' },
+  { id: 'gaming', name: 'Gaming', icon: '🎮' },
+];
+
+function SearchFound({ 
+  filteredProductsCount, 
+  searchParams, 
+  filters, 
+  onSearchChange, 
+  onFiltersChange 
+}: { 
+  filteredProductsCount: number;
+  searchParams: SearchParams;
+  filters: ProductFilters;
+  onSearchChange: (params: SearchParams) => void;
+  onFiltersChange: (filters: ProductFilters) => void;
+}) {
+  return (
+    <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-6">
+      <div className="flex flex-col gap-2 text-sm">
+        <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+          <span className="font-bold text-gray-900 dark:text-gray-100 text-lg">{filteredProductsCount}</span>
+          <span>products found</span>
+        </div>
+        {searchParams.query && (
+          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+            <span>for</span>
+            <span className="font-semibold text-blue-600 dark:text-blue-400">"{searchParams.query}"</span>
+            <button
+              onClick={() => onSearchChange({ ...searchParams, query: '' })}
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 ml-1"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+        {filters.category && (
+          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+            <span>in</span>
+            <span className="font-semibold text-blue-600 dark:text-blue-400">
+              {categories.find(c => c.id === filters.category)?.name}
+            </span>
+            <button
+              onClick={() => onFiltersChange({ ...filters, category: undefined })}
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 ml-1"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function FilterSidebar({ 
+  filters, 
+  onFiltersChange, 
+  isOpen, 
+  onToggle,
+  filteredProductsCount,
+  searchParams,
+  onSearchChange
+}: FilterSidebarProps) {
   const [priceRange, setPriceRange] = useState({
     min: filters.minPrice || '',
     max: filters.maxPrice || '',
@@ -34,7 +104,7 @@ export function FilterSidebar({ filters, onFiltersChange, isOpen, onToggle }: Fi
   const handlePriceRangeChange = (type: 'min' | 'max', value: string) => {
     const newPriceRange = { ...priceRange, [type]: value };
     setPriceRange(newPriceRange);
-    
+
     onFiltersChange({
       ...filters,
       minPrice: newPriceRange.min || undefined,
@@ -85,6 +155,15 @@ export function FilterSidebar({ filters, onFiltersChange, isOpen, onToggle }: Fi
       {/* Sidebar */}
       <div className={`${isOpen ? 'block' : 'hidden'} lg:block lg:w-64 shrink-0`}>
         <div className="bg-gray-100 dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors duration-200">
+          {/* Products Found */}
+          <SearchFound 
+            filteredProductsCount={filteredProductsCount}
+            searchParams={searchParams}
+            filters={filters}
+            onSearchChange={onSearchChange}
+            onFiltersChange={onFiltersChange}
+          />
+          
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Filters</h3>
